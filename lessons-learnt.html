@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lessons Learnt - Claude Draws a Birb</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.5rem;
+    }
+    a.back { color: #c8b890; text-decoration: none; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    a.back:hover { text-decoration: underline; }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 2rem;
+    }
+    .content {
+      max-width: 680px;
+      width: 100%;
+    }
+    h2 {
+      font-size: 1.3rem;
+      margin: 2rem 0 0.75rem;
+      color: #d4c8a8;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 0.4rem;
+    }
+    h2:first-of-type { margin-top: 0; }
+    p, li {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #c8bca0;
+      margin-bottom: 0.75rem;
+    }
+    ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.4rem; }
+    strong { color: #e0d4b8; }
+    code {
+      background: rgba(0,0,0,0.2);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .comparison {
+      display: flex;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .comparison img, .comparison svg {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .comparison .cap {
+      font-size: 0.8rem;
+      color: #a09880;
+      text-align: center;
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">&larr; Back to gallery</a>
+  <h1>Lessons Learnt</h1>
+
+  <div class="content">
+    <h2>1. Match Proportions First</h2>
+    <p>The single most impactful change was getting the <strong>volume, height, and overall proportions</strong> right before worrying about details. The first freehand attempt had a bird that was far too small within its frame. Once the body was scaled to fill the canvas like the reference photo, everything else fell into place more naturally.</p>
+
+    <h2>2. Direction Matters</h2>
+    <p>The reference bird faces the camera head-on, slightly turned right. The initial SVG faced left. Flipping with <code>transform="translate(w,0) scale(-1,1)"</code> fixed this instantly, but it's better to get the direction right from the start.</p>
+
+    <h2>3. The Artist Mirror Technique Works</h2>
+    <p>Adding a "Flip Both" button that mirrors both the drawing and reference simultaneously was inspired by a real artist technique. When you flip an image, proportional errors that your brain had adapted to become immediately obvious. This revealed issues in the belly shape and head-to-body ratio that weren't visible in the normal orientation.</p>
+
+    <h2>4. Tracing Beats Freehand (For Accuracy)</h2>
+    <p>The freehand approach produced a charming illustration, but the <strong>traced version</strong> &mdash; where the SVG viewBox matched the photo's pixel dimensions (516&times;780) &mdash; produced much better proportions. Using the reference image as a semi-transparent overlay made it possible to verify alignment in real-time.</p>
+
+    <h2>5. Belly Blending is Hard</h2>
+    <p>The hardest part was the transition from the vivid orange breast to the white belly. In the real bird, this is achieved by hundreds of overlapping feathers in varying shades. In SVG, the closest approximation uses:</p>
+    <ul>
+      <li>A <code>linearGradient</code> from orange to cream over the front clip region</li>
+      <li>Overlapping blurred ellipses from the brown sides</li>
+      <li>A <code>clipPath</code> to contain the belly area</li>
+      <li>Multiple <code>feGaussianBlur</code> filters at different radii</li>
+    </ul>
+    <p>Even with all of this, the result is smoother than real feathers. SVG simply doesn't have a good primitive for "irregular feathered edges."</p>
+
+    <h2>6. Gradients Are Everything</h2>
+    <p>The difference between a flat, cartoony bird and one that looks somewhat natural comes down to <strong>radial and linear gradients</strong>. Every major area (body, head, breast, wing, belly) uses its own gradient. The bird has around 10 gradient definitions &mdash; and could use more.</p>
+
+    <h2>7. Subtle Details Add Up</h2>
+    <p>Individually, these are nearly invisible. Together they make the bird feel real:</p>
+    <ul>
+      <li>Feather texture lines at 10-15% opacity</li>
+      <li>A darker crown on the head</li>
+      <li>A grey-brown ring around the orange face patch</li>
+      <li>White splotches in the orange (visible in the reference)</li>
+      <li>A secondary eye highlight at low opacity</li>
+      <li>Bark texture lines on the branch</li>
+    </ul>
+
+    <h2>8. SVG Filter Limitations</h2>
+    <p><code>feGaussianBlur</code> is the workhorse for soft edges, but it creates uniformly smooth transitions. Real feathers have <strong>irregular, directional</strong> softness. SVG doesn't have a "feather edge" filter, so approximation with multiple overlapping blurred shapes is the best available option.</p>
+
+    <h2>9. What Would Improve It Further</h2>
+    <ul>
+      <li><strong>More path detail</strong> &mdash; hand-tracing individual feather groups instead of using ellipses</li>
+      <li><strong>SVG turbulence filters</strong> &mdash; <code>feTurbulence</code> could add organic texture to the feather areas</li>
+      <li><strong>Clipping per-feather-group</strong> &mdash; separate clip regions for breast, belly, and flanks</li>
+      <li><strong>More color stops</strong> &mdash; the orange-to-white transition could use 8-10 stops instead of 5</li>
+      <li><strong>Ambient occlusion</strong> &mdash; subtle shadows where the head meets the body and under the wing</li>
+    </ul>
+  </div>
+</body>
+</html>

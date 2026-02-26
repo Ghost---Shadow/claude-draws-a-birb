@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.8rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #b8aa90;
+      font-style: italic;
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .cards {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 900px;
+    }
+    .card {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 260px;
+      text-decoration: none;
+      color: #e8dcc8;
+      transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      background: rgba(0,0,0,0.35);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+      line-height: 1;
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .card p {
+      font-size: 0.85rem;
+      color: #b8aa90;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .reference-strip {
+      margin-top: 3rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .reference-strip img {
+      width: 120px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .reference-strip .label {
+      font-size: 0.85rem;
+      color: #a09880;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+    .reference-strip .label a {
+      color: #c8b890;
+      text-decoration: none;
+    }
+    .reference-strip .label a:hover { text-decoration: underline; }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.75rem;
+      color: #80755f;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb</h1>
+  <p class="subtitle">An experiment in AI-generated SVG art</p>
+
+  <div class="cards">
+    <a class="card" href="freehand.html">
+      <div class="card-icon">&#9998;</div>
+      <h2>Freehand Attempt</h2>
+      <p>First attempt: drawing a European Robin from scratch using SVG paths, gradients, and filters.</p>
+    </a>
+
+    <a class="card" href="traced.html">
+      <div class="card-icon">&#9000;</div>
+      <h2>Traced Version</h2>
+      <p>Second attempt: tracing over the reference photo using matched pixel coordinates. Includes overlay toggle.</p>
+    </a>
+
+    <a class="card" href="lessons-learnt.html">
+      <div class="card-icon">&#9881;</div>
+      <h2>Lessons Learnt</h2>
+      <p>What worked, what didn't, and what an AI learns about drawing birds in SVG.</p>
+    </a>
+  </div>
+
+  <div class="reference-strip">
+    <img src="reference-robin.jpg" alt="Reference robin photo">
+    <div class="label">
+      Reference photo: "Cute Robin" by Pixabay on
+      <a href="https://www.stockvault.net/photo/208041/cute-robin" target="_blank" rel="noopener">Stockvault.net</a>
+      (Free Stock Photo)
+    </div>
+  </div>
+
+  <footer>SVG drawn by Claude (Anthropic) &bull; 2026</footer>
+</body>
+</html>

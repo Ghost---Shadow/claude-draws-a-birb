@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - European Robin</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+    }
+    h1 {
+      color: #e8dcc8;
+      font-size: 2rem;
+      margin: 1.5rem 0 0.5rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .comparison {
+      display: flex;
+      gap: 3rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 1rem 2rem;
+    }
+    .panel { text-align: center; }
+    .panel h2 {
+      color: #c8bda8;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      font-weight: normal;
+      font-style: italic;
+    }
+    svg { filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3)); }
+    .reference-img {
+      height: 480px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .credit {
+      color: #a09880;
+      font-size: 0.75rem;
+      margin-top: 1.5rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .credit a { color: #c8b890; text-decoration: none; }
+    .credit a:hover { text-decoration: underline; }
+    .flip-btn {
+      background: rgba(255,255,255,0.12);
+      color: #e8dcc8;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .flip-btn:hover { background: rgba(255,255,255,0.2); }
+    .comparison.flipped .panel svg,
+    .comparison.flipped .panel .reference-img {
+      transform: scaleX(-1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb</h1>
+  <button class="flip-btn" onclick="document.querySelector('.comparison').classList.toggle('flipped')">Flip Both (Artist Mirror)</button>
+  <div class="comparison">
+    <div class="panel">
+      <h2>My SVG Drawing</h2>
+      <!-- viewBox sized so the bird fills the canvas like the photo -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 480" width="320" height="480">
+        <defs>
+          <radialGradient id="bokeh" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.12)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+
+          <!-- Body brown -->
+          <radialGradient id="bodyGrad" cx="40%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#9B8468"/>
+            <stop offset="35%" stop-color="#7D6B55"/>
+            <stop offset="100%" stop-color="#5C4C3C"/>
+          </radialGradient>
+
+          <!-- Orange breast -->
+          <radialGradient id="breastGrad" cx="50%" cy="35%" r="55%">
+            <stop offset="0%" stop-color="#F5A825"/>
+            <stop offset="50%" stop-color="#E89015"/>
+            <stop offset="100%" stop-color="#CC7A08"/>
+          </radialGradient>
+
+          <!-- Orange face -->
+          <radialGradient id="faceGrad" cx="45%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#F0A020"/>
+            <stop offset="60%" stop-color="#E08818"/>
+            <stop offset="100%" stop-color="#C87010"/>
+          </radialGradient>
+
+          <!-- Head brown -->
+          <radialGradient id="headGrad" cx="45%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#8A7B65"/>
+            <stop offset="60%" stop-color="#70604C"/>
+            <stop offset="100%" stop-color="#5E5040"/>
+          </radialGradient>
+
+          <!-- Belly - warm buff, not white -->
+          <radialGradient id="bellyGrad" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="#D8C8A8"/>
+            <stop offset="50%" stop-color="#C8B898"/>
+            <stop offset="100%" stop-color="#B0A080"/>
+          </radialGradient>
+
+          <!-- Breast-to-belly vertical gradient - warm buff transition -->
+          <linearGradient id="breastToBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E89018"/>
+            <stop offset="30%" stop-color="#D49030"/>
+            <stop offset="50%" stop-color="#C8A060"/>
+            <stop offset="72%" stop-color="#C0AE85"/>
+            <stop offset="100%" stop-color="#C0B090"/>
+          </linearGradient>
+
+          <!-- Wing -->
+          <linearGradient id="wingGrad" x1="0%" y1="0%" x2="80%" y2="100%">
+            <stop offset="0%" stop-color="#72624E"/>
+            <stop offset="40%" stop-color="#5C4E3C"/>
+            <stop offset="100%" stop-color="#483A2C"/>
+          </linearGradient>
+
+          <!-- Tail -->
+          <linearGradient id="tailGrad" x1="20%" y1="0%" x2="100%" y2="80%">
+            <stop offset="0%" stop-color="#5A4C3C"/>
+            <stop offset="100%" stop-color="#3E3028"/>
+          </linearGradient>
+
+          <!-- Branch -->
+          <linearGradient id="branchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#6B4E3D"/>
+            <stop offset="100%" stop-color="#3E2723"/>
+          </linearGradient>
+
+          <filter id="fluff" x="-3%" y="-3%" width="106%" height="106%">
+            <feGaussianBlur stdDeviation="1.5"/>
+          </filter>
+          <filter id="softBlend" x="-5%" y="-5%" width="110%" height="110%">
+            <feGaussianBlur stdDeviation="4"/>
+          </filter>
+
+          <!-- Front body clip -->
+          <clipPath id="frontClip">
+            <ellipse cx="152" cy="275" rx="95" ry="115"/>
+          </clipPath>
+        </defs>
+
+        <!-- Flip entire bird to face right (matching reference photo) -->
+        <g transform="translate(320,0) scale(-1,1)">
+
+        <!-- Bokeh -->
+        <circle cx="45" cy="50" r="35" fill="url(#bokeh)" opacity="0.5"/>
+        <circle cx="280" cy="80" r="45" fill="url(#bokeh)" opacity="0.35"/>
+        <circle cx="60" cy="410" r="30" fill="url(#bokeh)" opacity="0.3"/>
+        <circle cx="270" cy="40" r="22" fill="url(#bokeh)" opacity="0.4"/>
+        <circle cx="290" cy="420" r="40" fill="url(#bokeh)" opacity="0.2"/>
+
+        <!-- === BRANCH === -->
+        <path d="M -10 420 Q 80 408 160 412 Q 240 416 340 402"
+              stroke="url(#branchGrad)" stroke-width="16" fill="none" stroke-linecap="round"/>
+        <path d="M 0 416 Q 80 404 160 408 Q 240 412 330 399"
+              stroke="#7D6050" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.22"/>
+        <path d="M 50 414 Q 78 410 105 413" stroke="#4A3628" stroke-width="1" fill="none" opacity="0.25"/>
+        <path d="M 140 410 Q 170 406 200 410" stroke="#4A3628" stroke-width="1" fill="none" opacity="0.22"/>
+
+        <!-- === TAIL (behind body) === -->
+        <path d="M 215 305 Q 270 318 300 365 Q 278 342 250 318 Z" fill="#483C2E"/>
+        <path d="M 218 295 Q 280 308 315 355 Q 288 328 255 305 Z" fill="url(#tailGrad)"/>
+        <path d="M 216 286 Q 285 296 322 345 Q 292 318 260 292 Z" fill="#483C2E"/>
+        <path d="M 225 304 Q 275 316 302 355" stroke="#382C20" stroke-width="0.6" fill="none" opacity="0.25"/>
+
+        <!-- === BODY (brown back/sides) - BIG round ball === -->
+        <ellipse cx="155" cy="280" rx="110" ry="125" fill="url(#bodyGrad)"/>
+
+        <!-- === FRONT: orange breast -> white belly === -->
+        <g clip-path="url(#frontClip)">
+          <rect x="57" y="175" width="190" height="220" fill="url(#breastToBelly)"/>
+          <!-- Boost orange in upper breast -->
+          <ellipse cx="152" cy="225" rx="75" ry="50" fill="url(#breastGrad)" opacity="0.8"/>
+          <!-- Subtle cream in lower belly -->
+          <ellipse cx="152" cy="345" rx="50" ry="35" fill="url(#bellyGrad)" opacity="0.45"/>
+          <!-- Blend zone -->
+          <ellipse cx="152" cy="290" rx="65" ry="28" fill="#D8A850" opacity="0.2" filter="url(#softBlend)"/>
+        </g>
+
+        <!-- Breast feather texture -->
+        <g opacity="0.16" stroke="#B06808" fill="none" stroke-width="0.7">
+          <path d="M 102 218 Q 132 213 158 220"/>
+          <path d="M 96 240 Q 130 234 165 242"/>
+          <path d="M 98 262 Q 135 255 172 264"/>
+          <path d="M 105 284 Q 140 277 172 286"/>
+          <path d="M 112 306 Q 142 300 168 308"/>
+        </g>
+
+        <!-- Side feather texture -->
+        <g opacity="0.1" stroke="#4A3D30" fill="none" stroke-width="0.5">
+          <path d="M 68 245 Q 88 240 108 246"/>
+          <path d="M 62 270 Q 85 264 108 272"/>
+          <path d="M 65 295 Q 88 290 110 296"/>
+          <path d="M 72 320 Q 92 315 112 322"/>
+          <path d="M 205 248 Q 225 244 242 250"/>
+          <path d="M 210 272 Q 228 268 244 274"/>
+          <path d="M 208 298 Q 224 294 238 300"/>
+        </g>
+
+        <!-- === WING === -->
+        <path d="M 185 210
+                 Q 212 200 248 222
+                 Q 278 248 282 290
+                 Q 276 322 252 332
+                 Q 228 338 210 328
+                 Q 192 316 186 288
+                 Q 182 250 185 210 Z"
+              fill="url(#wingGrad)"/>
+        <path d="M 192 228 Q 230 236 260 266" stroke="#3C2E22" stroke-width="1" fill="none" opacity="0.3"/>
+        <path d="M 188 250 Q 228 258 260 290" stroke="#3C2E22" stroke-width="0.9" fill="none" opacity="0.25"/>
+        <path d="M 186 274 Q 224 280 256 310" stroke="#3C2E22" stroke-width="0.8" fill="none" opacity="0.22"/>
+        <path d="M 188 296 Q 218 302 244 326" stroke="#3C2E22" stroke-width="0.7" fill="none" opacity="0.18"/>
+        <path d="M 196 218 Q 220 212 240 224" stroke="#8A7A64" stroke-width="0.8" fill="none" opacity="0.18"/>
+
+        <!-- === NECK FLUFF === -->
+        <ellipse cx="148" cy="192" rx="65" ry="28" fill="#7A6B55" opacity="0.55" filter="url(#fluff)"/>
+
+        <!-- === HEAD === -->
+        <ellipse cx="145" cy="155" rx="62" ry="55" fill="url(#headGrad)"/>
+        <!-- Darker crown -->
+        <ellipse cx="148" cy="125" rx="40" ry="22" fill="#5C4E40" opacity="0.3" filter="url(#fluff)"/>
+
+        <!-- === ORANGE FACE === -->
+        <path d="M 95 178
+                 Q 102 150 138 138
+                 Q 158 134 178 145
+                 Q 192 158 190 180
+                 Q 184 200 162 210
+                 Q 135 215 110 205
+                 Q 92 195 95 178 Z"
+              fill="url(#faceGrad)" opacity="0.92"/>
+
+        <!-- Connect face orange to breast orange seamlessly -->
+        <ellipse cx="145" cy="205" rx="52" ry="20" fill="#E08818" opacity="0.55" filter="url(#softBlend)"/>
+
+        <!-- Grey-brown border around orange -->
+        <path d="M 95 175 Q 100 155 120 142" stroke="#6E5E4C" stroke-width="3.5" fill="none" opacity="0.18" filter="url(#fluff)"/>
+        <path d="M 178 148 Q 190 158 192 175" stroke="#6E5E4C" stroke-width="3.5" fill="none" opacity="0.18" filter="url(#fluff)"/>
+
+        <!-- Head feather texture -->
+        <g opacity="0.1" stroke="#4A3D30" fill="none" stroke-width="0.5">
+          <path d="M 115 140 Q 135 135 155 141"/>
+          <path d="M 108 156 Q 128 150 148 156"/>
+          <path d="M 162 140 Q 175 137 186 144"/>
+        </g>
+
+        <!-- === EYE === -->
+        <circle cx="132" cy="154" r="11" fill="#5A4D3E" opacity="0.2"/>
+        <circle cx="132" cy="154" r="7.5" fill="#0C0604"/>
+        <circle cx="129" cy="151" r="2.8" fill="white" opacity="0.92"/>
+        <circle cx="135.5" cy="157" r="1.2" fill="white" opacity="0.3"/>
+
+        <!-- === BEAK === -->
+        <path d="M 95 162 L 66 157 Q 61 160.5 66 164 L 95 165 Z" fill="#1A1410"/>
+        <path d="M 95 165 L 70 164 Q 64 167.5 70 170 L 95 169 Z" fill="#282018"/>
+        <path d="M 93 162.5 L 70 158.5" stroke="#302820" stroke-width="0.4" fill="none" opacity="0.4"/>
+
+        <!-- === LEGS === -->
+        <g stroke="#9B7B5A" fill="none" stroke-width="3" stroke-linecap="round">
+          <!-- Left leg -->
+          <path d="M 138 395 L 134 418"/>
+          <path d="M 134 418 Q 120 424 112 427" stroke-width="2"/>
+          <path d="M 134 418 Q 128 428 124 432" stroke-width="2"/>
+          <path d="M 134 418 Q 142 426 148 428" stroke-width="2"/>
+          <path d="M 134 418 Q 126 414 120 412" stroke-width="1.6"/>
+
+          <!-- Right leg -->
+          <path d="M 172 392 L 178 416"/>
+          <path d="M 178 416 Q 166 422 158 425" stroke-width="2"/>
+          <path d="M 178 416 Q 176 426 174 430" stroke-width="2"/>
+          <path d="M 178 416 Q 188 424 194 426" stroke-width="2"/>
+          <path d="M 178 416 Q 186 412 192 410" stroke-width="1.6"/>
+        </g>
+
+        </g><!-- end flip group -->
+      </svg>
+    </div>
+
+    <div class="panel">
+      <h2>Reference Photo</h2>
+      <img class="reference-img" src="reference-robin.jpg" alt="European Robin - reference photo from Stockvault.net">
+    </div>
+  </div>
+
+  <p class="credit">
+    Reference photo: "Cute Robin" by Pixabay on
+    <a href="https://www.stockvault.net/photo/208041/cute-robin" target="_blank" rel="noopener">Stockvault.net</a>
+    (Free Stock Photo) &bull; SVG drawn by Claude (Anthropic)
+  </p>
+</body>
+</html>
