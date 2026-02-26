@@ -1,10 +1,12 @@
 # Draw some birbs
 
-1. Open chrome
-2. Get a photo of a bird as reference from google images and save it to disk
-3. Draw a bird in HTML + SVG
-4. View your own creation in Chrome
-5. Iterate
+1. Read previous learning from lessons-learnt.html
+2. Open chrome
+3. Get a photo of a bird as reference from google images and save it to disk
+4. Draw a bird in HTML + SVG
+5. View your own creation in Chrome
+6. Iterate
+7. Write learnings to lessons-learnt.html
 
 ## Credits
 
