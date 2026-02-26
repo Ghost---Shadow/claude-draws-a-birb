@@ -9,11 +9,13 @@
 - **Usage**: Used as reference for SVG drawing of European Robin
 
 ## bluejay.jpg
-- **Source**: Wikimedia Commons (attempted)
+- **Source**: eBird (Cornell Lab of Ornithology)
 - **Title**: Blue Jay (Cyanocitta cristata)
-- **License**: Public Domain / Creative Commons
-- **Note**: Original reference photos sourced from public domain bird photography collections
+- **License**: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+- **URL**: https://ebird.org/species/blujay
+- **Note**: High-quality reference photo from eBird's extensive bird photography collection
 - **Usage**: Used as reference for SVG drawing of Blue Jay
+- **Attribution**: Photo sourced from eBird (https://ebird.org) - the world's largest collection of bird observations
 
 ---
 

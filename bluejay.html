@@ -99,132 +99,82 @@
       <div class="label">My SVG Drawing (Blue Jay)</div>
       <svg id="myDrawing" viewBox="0 0 600 700" width="400" height="467">
         <defs>
-          <!-- Gradients for the blue jay -->
           <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:#87ceeb;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#e0f6ff;stop-opacity:1" />
           </linearGradient>
-
           <radialGradient id="headGrad" cx="50%" cy="30%">
             <stop offset="0%" style="stop-color:#5a9ef5;stop-opacity:1" />
             <stop offset="60%" style="stop-color:#2563b8;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#0f2840;stop-opacity:1" />
           </radialGradient>
-
           <radialGradient id="bodyGrad" cx="40%" cy="35%">
             <stop offset="0%" style="stop-color:#6bb3ff;stop-opacity:1" />
             <stop offset="50%" style="stop-color:#3b7fd4;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#1a3f6b;stop-opacity:1" />
           </radialGradient>
-
           <radialGradient id="bellyGrad" cx="50%" cy="50%">
             <stop offset="0%" style="stop-color:#f5f5f5;stop-opacity:1" />
             <stop offset="70%" style="stop-color:#e8e8e8;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#d8d8d8;stop-opacity:1" />
           </radialGradient>
-
           <radialGradient id="wingGrad" cx="30%" cy="40%">
             <stop offset="0%" style="stop-color:#5a9ef5;stop-opacity:1" />
             <stop offset="50%" style="stop-color:#2a5fa3;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#0f2840;stop-opacity:1" />
           </radialGradient>
-
           <linearGradient id="faceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:#f8b578;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#f0a060;stop-opacity:1" />
           </linearGradient>
-
           <filter id="featherBlur">
             <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
           </filter>
-
           <filter id="softBlur">
             <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
           </filter>
-
-          <!-- Branch texture -->
           <linearGradient id="branchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:#9a7d52;stop-opacity:1" />
             <stop offset="50%" style="stop-color:#7a5f35;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#5a3f1f;stop-opacity:1" />
           </linearGradient>
         </defs>
-
-        <!-- Background -->
         <rect width="600" height="700" fill="url(#skyGrad)" opacity="0.2"/>
-
-        <!-- Branch -->
         <ellipse cx="300" cy="600" rx="160" ry="38" fill="url(#branchGrad)" />
         <path d="M 90 600 Q 300 575 510 600" stroke="#3d2817" stroke-width="9" fill="none" opacity="0.7" filter="url(#featherBlur)" />
-
-        <!-- Tail feathers (blue jay has distinctive long tail) - behind body -->
         <path d="M 160 480 Q 100 520 80 620" stroke="url(#wingGrad)" stroke-width="45" fill="none" opacity="0.8" stroke-linecap="round" filter="url(#softBlur)" />
         <path d="M 440 480 Q 500 520 520 620" stroke="url(#wingGrad)" stroke-width="45" fill="none" opacity="0.8" stroke-linecap="round" filter="url(#softBlur)" />
-
-        <!-- Left wing -->
         <ellipse cx="200" cy="400" rx="95" ry="145" fill="url(#wingGrad)" transform="rotate(-40 200 400)" />
-
-        <!-- Right wing -->
         <ellipse cx="400" cy="390" rx="95" ry="145" fill="url(#wingGrad)" transform="rotate(40 400 390)" />
-
-        <!-- Body -->
         <ellipse cx="300" cy="430" rx="115" ry="150" fill="url(#bodyGrad)" />
-
-        <!-- Belly/Breast (white) -->
         <ellipse cx="300" cy="470" rx="80" ry="115" fill="url(#bellyGrad)" />
-
-        <!-- Chest (peachy/orange) -->
         <ellipse cx="300" cy="370" rx="75" ry="85" fill="url(#faceGrad)" opacity="0.95" />
-
-        <!-- Head -->
         <circle cx="300" cy="250" r="68" fill="url(#headGrad)" />
-
-        <!-- Crest (distinctive blue jay feature) - more prominent -->
         <path d="M 290 190 Q 270 110 275 60 Q 290 30 305 60 Q 310 110 290 190" fill="#1f4a7a" filter="url(#featherBlur)" />
         <path d="M 310 190 Q 330 115 355 70 Q 350 40 335 70 Q 320 120 310 190" fill="#2563b8" filter="url(#featherBlur)" />
         <path d="M 300 190 Q 300 100 315 50 Q 310 25 295 50 Q 295 105 300 190" fill="#1a3a5c" filter="url(#featherBlur)" />
-
-        <!-- Face markings (white patches) -->
         <ellipse cx="315" cy="245" rx="28" ry="35" fill="#ffffff" opacity="0.9" />
         <ellipse cx="280" cy="265" rx="22" ry="22" fill="#fafafa" opacity="0.8" />
-
-        <!-- Black mask/stripe (characteristic of blue jays) -->
         <path d="M 270 240 Q 260 255 265 280 Q 270 290 280 285" stroke="#1a1a1a" stroke-width="5" fill="none" filter="url(#featherBlur)" opacity="0.9" />
         <path d="M 330 240 Q 340 255 335 280 Q 330 290 320 285" stroke="#1a1a1a" stroke-width="5" fill="none" filter="url(#featherBlur)" opacity="0.9" />
-
-        <!-- Eye ring (darker blue) -->
         <circle cx="308" cy="245" r="9" fill="none" stroke="#0f2840" stroke-width="2" opacity="0.6" />
-
-        <!-- Eye -->
         <circle cx="308" cy="245" r="6" fill="#000000" />
         <circle cx="309" cy="243" r="2.5" fill="#ffffff" opacity="0.95" />
         <circle cx="309.5" cy="244" r="1" fill="#ffffff" opacity="0.7" />
-
-        <!-- Beak -->
         <path d="M 325 260 L 360 255 L 325 270 Z" fill="#2a2a2a" />
         <path d="M 325 260 L 360 255 L 325 270 Z" stroke="#1a1a1a" stroke-width="1.5" fill="none" opacity="0.6" />
-
-        <!-- Wing detail lines (feathers) - more feather pattern -->
         <path d="M 220 310 Q 180 360 200 510" stroke="#0f2840" stroke-width="2.5" fill="none" opacity="0.5" filter="url(#featherBlur)" />
         <path d="M 245 300 Q 220 390 245 530" stroke="#0f2840" stroke-width="2.5" fill="none" opacity="0.45" filter="url(#featherBlur)" />
         <path d="M 270 295 Q 260 400 280 540" stroke="#0f2840" stroke-width="2" fill="none" opacity="0.4" filter="url(#featherBlur)" />
         <path d="M 330 295 Q 340 400 320 540" stroke="#0f2840" stroke-width="2" fill="none" opacity="0.4" filter="url(#featherBlur)" />
         <path d="M 355 300 Q 380 390 355 530" stroke="#0f2840" stroke-width="2.5" fill="none" opacity="0.45" filter="url(#featherBlur)" />
         <path d="M 380 310 Q 420 360 400 510" stroke="#0f2840" stroke-width="2.5" fill="none" opacity="0.5" filter="url(#featherBlur)" />
-
-        <!-- Body detail lines -->
         <path d="M 300 340 Q 290 420 295 530" stroke="#c0c0c0" stroke-width="1.5" fill="none" opacity="0.3" filter="url(#featherBlur)" />
         <path d="M 300 340 Q 310 420 305 530" stroke="#c0c0c0" stroke-width="1.5" fill="none" opacity="0.3" filter="url(#featherBlur)" />
-
-        <!-- Leg -->
         <line x1="293" y1="555" x2="293" y2="600" stroke="#4a4a4a" stroke-width="3.5" stroke-linecap="round" />
         <line x1="307" y1="555" x2="307" y2="600" stroke="#4a4a4a" stroke-width="3.5" stroke-linecap="round" />
-
-        <!-- Foot -->
         <ellipse cx="291" cy="608" rx="9" ry="7" fill="#3a3a3a" />
         <ellipse cx="309" cy="608" rx="9" ry="7" fill="#3a3a3a" />
-
-        <!-- Toe details -->
         <path d="M 282 615 L 275 625" stroke="#2a2a2a" stroke-width="2" stroke-linecap="round" />
         <path d="M 318 615 L 325 625" stroke="#2a2a2a" stroke-width="2" stroke-linecap="round" />
       </svg>
@@ -232,13 +182,13 @@
 
     <div class="drawing-container">
       <div class="label">Reference Photo</div>
-      <img id="referenceImg" src="images/bluejay.jpg" alt="Blue Jay reference photo" style="max-width: 350px; border-radius: 8px;" onerror="this.parentElement.innerHTML='<div style=\"padding: 2rem; background: rgba(0,0,0,0.2); border-radius: 8px; text-align: center; color: #b8aa90; max-width: 350px;\"><p><strong>Reference: Blue Jay (Cyanocitta cristata)</strong></p><p style=\"font-size: 0.85rem; margin-top: 0.5rem;\">Image attribution: Wikimedia Commons (Public Domain)</p><p style=\"font-size: 0.75rem; margin-top: 1rem; color: #8a7860;\">Used during drawing process to ensure accurate proportions and coloring</p><p style=\"font-size: 0.75rem; margin-top: 1rem; margin-bottom: 0;\"><a href=\"images/ATTRIBUTION.md\" style=\"color: #c8b890;\">View image credits</a></p></div>'">
+      <img id="referenceImg" src="images/bluejay.jpg" alt="Blue Jay reference photo" style="max-width: 350px; border-radius: 8px;">>
     </div>
   </div>
 
   <div class="footer-link">
-    <p>Reference photo: Blue Jay (Cyanocitta cristata) - Wikimedia Commons (Public Domain)</p>
-    <p><a href="lessons-learnt.html">← Back to Lessons Learnt</a></p>
+    <p>Reference photo: Blue Jay (Cyanocitta cristata) from <a href="https://ebird.org/species/blujay" target="_blank" rel="noopener">eBird</a> (CC BY-NC-SA 4.0)</p>
+    <p><a href="images/ATTRIBUTION.md">View full image credits</a> • <a href="lessons-learnt.html">Back to Lessons Learnt</a></p>
   </div>
 
   <script>
