@@ -122,6 +122,76 @@
       <li><strong>More color stops</strong> &mdash; the orange-to-white transition could use 8-10 stops instead of 5</li>
       <li><strong>Ambient occlusion</strong> &mdash; subtle shadows where the head meets the body and under the wing</li>
     </ul>
+
+    <h2>10. Iteration 3: Drawing a Blue Jay (Different Species)</h2>
+    <p>After mastering the robin, the next challenge was drawing a <strong>completely different bird</strong> &mdash; the Blue Jay. This revealed new technical and artistic challenges:</p>
+
+    <h2>11. The Crest Problem</h2>
+    <p>The blue jay's most distinctive feature is its sharp, pointed <strong>crest</strong> on top of its head. Unlike the robin's soft rounded head, the crest required:</p>
+    <ul>
+      <li>Multiple overlapping path elements to create the feathery appearance</li>
+      <li>Different angles and rotations for each "feather" in the crest</li>
+      <li>Careful layering to avoid flattening the 3D effect</li>
+      <li>Subtle color variations between crest feathers (#1a3a5c, #1f4a7a, #2563b8)</li>
+    </ul>
+    <p>A single ellipse or circle couldn't capture the sharp, pointed nature. <strong>Three separate paths</strong> work better, though a hand-traced spline would be more accurate.</p>
+
+    <h2>12. Color Complexity Increases with Species</h2>
+    <p>The robin had 3-4 primary colors. The blue jay has <strong>more:</strong></p>
+    <ul>
+      <li><strong>Bright blue</strong> (wings, back) &mdash; #5a9ef5, #2a5fa3, #0f2840 (gradient)</li>
+      <li><strong>White/cream</strong> (belly, face) &mdash; #f5f5f5, #ffffff</li>
+      <li><strong>Peachy/tan</strong> (chest patch) &mdash; #f8b578, #f0a060</li>
+      <li><strong>Black</strong> (mask, eye, beak) &mdash; #1a1a1a</li>
+      <li><strong>Brown</strong> (branch) &mdash; #9a7d52, #5a3f1f</li>
+    </ul>
+    <p>Managing these colors with gradients and opacity required more careful planning than the robin's simpler palette.</p>
+
+    <h2>13. Feather Pattern Complexity</h2>
+    <p>Blue jays have <strong>highly visible feather patterns</strong> on their wings and body. The robin had subtle texture; the blue jay demands visible <strong>feather definition lines.</strong> I added 6 wing feather strokes instead of 4, creating a more complex bird. Each line needed:</p>
+    <ul>
+      <li>Different opacity levels (0.4-0.5) to avoid overwhelming the design</li>
+      <li>Careful curvature matching the wing's shape</li>
+      <li>Filters to soften edges and blend into the gradient background</li>
+    </ul>
+    <p>More feather lines made the bird look more real, but also more complex to manage.</p>
+
+    <h2>14. The Tail Feature</h2>
+    <p>The blue jay's tail is <strong>long and fan-shaped</strong>, quite different from the robin's short tail. Rendering it required:</p>
+    <ul>
+      <li>Using curved strokes instead of ellipses (to show the feathered nature)</li>
+      <li>Positioning it <strong>behind</strong> the body (z-order matters)</li>
+      <li>Making it visually distinct from the wings through color and opacity</li>
+    </ul>
+    <p>This was my first experience with multi-part features that extend beyond the body boundary.</p>
+
+    <h2>15. Key Lesson: Different Birds Require Different Approaches</h2>
+    <p>The robin's approach (soft gradients, simple shapes, subtle details) worked well. The blue jay demanded a <strong>different visual language:</strong></p>
+    <ul>
+      <li>More defined shapes (the crest, the distinct tail)</li>
+      <li>Higher contrast between colors</li>
+      <li>More visible detail lines (feathers)</li>
+      <li>Taller proportions (larger head:body ratio)</li>
+    </ul>
+    <p>If I were to draw a third bird, I'd need to study its <strong>unique features first</strong> and design the SVG architecture around them, rather than trying to reuse the robin's template.</p>
+
+    <h2>16. What Worked Well This Time</h2>
+    <ul>
+      <li><strong>Gradients with more stops</strong> &mdash; the radial gradients on the head and wings looked more natural</li>
+      <li><strong>Filter application</strong> &mdash; Gaussian blur on feather lines made them feel integrated</li>
+      <li><strong>Eye detail</strong> &mdash; adding an eye ring around the pupil felt more lifelike</li>
+      <li><strong>Leg/foot anatomy</strong> &mdash; visible toes and proper proportions made the bird feel grounded</li>
+    </ul>
+
+    <h2>17. Tools for Next Iteration</h2>
+    <p>To improve further, I'd want:</p>
+    <ul>
+      <li><code>feTurbulence</code> filter for organic feather texture</li>
+      <li>More precise <code>&lt;path&gt;</code> elements tracing real feather shapes</li>
+      <li><code>clipPath</code> to create sharp boundaries between color regions</li>
+      <li>Animation effects (subtle feather movement) using SVG animation</li>
+      <li>A proper reference photo overlaid at 50% opacity to trace from</li>
+    </ul>
   </div>
 </body>
 </html>
