@@ -17,6 +17,14 @@
 - **Usage**: Used as reference for SVG drawing of Blue Jay
 - **Attribution**: Photo sourced from eBird (https://ebird.org) - the world's largest collection of bird observations
 
+## hummingbird.jpg
+- **Source**: Stockvault.net
+- **Title**: Hummingbird on the Branch
+- **Author**: Pixabay
+- **License**: Creative Commons - CC0 (Public Domain)
+- **URL**: https://www.stockvault.net/photo/202359/hummingbird-on-the-branch
+- **Usage**: Used as reference for SVG drawing of hummingbird
+
 ---
 
 All reference images are used for educational purposes in accordance with their respective licenses.

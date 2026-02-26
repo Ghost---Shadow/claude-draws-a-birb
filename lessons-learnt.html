@@ -192,6 +192,63 @@
       <li>Animation effects (subtle feather movement) using SVG animation</li>
       <li>A proper reference photo overlaid at 50% opacity to trace from</li>
     </ul>
+
+    <h2>18. Iteration 4: Drawing a Hummingbird (feTurbulence Breakthrough)</h2>
+    <p>The fourth bird was an <strong>emerald-speckled hummingbird</strong> perched on a branch — a completely different challenge from the robin and blue jay. Key new discoveries:</p>
+
+    <h2>19. feTurbulence is the Right Tool for Organic Spots</h2>
+    <p>The biggest lesson: hand-placing dozens of ellipses to simulate mottled feather patterns produces <strong>regular, artificial-looking blobs</strong>. The real solution is <code>feTurbulence</code> + <code>feColorMatrix</code>:</p>
+    <ul>
+      <li>Generate noise: <code>&lt;feTurbulence type="turbulence" baseFrequency="0.038 0.028" numOctaves="3" seed="11"/&gt;</code></li>
+      <li>Threshold into blobs: <code>feColorMatrix</code> with <code>values="0 0 0 0 0 / 0 0 0 0 0 / 0 0 0 0 0 / 8 0 0 0 -3.2"</code> — this sets alpha = 8×R(noise) − 3.2</li>
+      <li>Composite back: <code>&lt;feComposite in="SourceGraphic" in2="blobAlpha" operator="in"/&gt;</code> reveals the source colour only where the threshold fires</li>
+      <li>Apply to a <strong>solid teal ellipse</strong> clipped to the breast region — result: perfectly organic, irregular iridescent patches</li>
+    </ul>
+    <p><strong>Tuning knobs:</strong> <code>baseFrequency</code> controls blob size (lower = bigger), <code>seed</code> changes the pattern, and the multiplier/offset in the alpha row controls density vs sparsity of spots.</p>
+
+    <h2>20. The Head-Body Disconnection Problem</h2>
+    <p>Hummingbirds have large heads relative to their compact bodies, but in SVG, drawing these as separate geometric shapes (a circle and an ellipse) always creates a visible "ball sitting on an egg" look. Root causes:</p>
+    <ul>
+      <li>Sharp edges on both shapes — real birds have feathers that blur the boundary</li>
+      <li>SVG has no equivalent to ink wash or soft brush blending along an edge</li>
+      <li>A dark <code>feGaussianBlur</code> ellipse at the neck junction helps but doesn't fully solve it</li>
+    </ul>
+    <p><strong>Better approach</strong>: define the bird's entire silhouette as a single <code>&lt;path&gt;</code>, then overlay the white breast area and dark head cap as separate layers. This avoids any geometric boundary between "head" and "body".</p>
+
+    <h2>21. Hummingbird's Unique Proportions</h2>
+    <p>Unlike robins and blue jays, hummingbirds have distinct proportions that must be respected from the start:</p>
+    <ul>
+      <li><strong>Beak length</strong>: roughly 50% of body height — this is the defining feature; too short and it's not a hummingbird</li>
+      <li><strong>Head:body ratio</strong>: larger than most birds (~35:65 height), but the head is NOT bigger than the body</li>
+      <li><strong>Body shape</strong>: nearly perfectly oval/football-shaped when perched, very compact</li>
+      <li><strong>Tail</strong>: very short, barely visible below the branch — unlike the blue jay's fan tail</li>
+      <li><strong>Wings</strong>: entirely tucked when perched, just a dark oval visible on the back</li>
+    </ul>
+
+    <h2>22. Multiple feTurbulence Layers for Varied Pattern Density</h2>
+    <p>A single turbulence pass produces blobs of uniform character. Layering two or three passes with different seeds and frequencies creates:</p>
+    <ul>
+      <li>Dense fine spotting in the throat area (higher <code>baseFrequency</code>)</li>
+      <li>Larger blobs in the mid-breast (lower <code>baseFrequency</code>)</li>
+      <li>Varying brightness across spots (second layer with lower opacity)</li>
+    </ul>
+    <p>This multi-layer approach much better approximates the <strong>graduated density</strong> of real feather patterning.</p>
+
+    <h2>23. Filter Side-Effects to Watch For</h2>
+    <p>The <code>bodySheen</code> filter (intended to add iridescent sheen to the dark back) unexpectedly created a bright white blob because the filter's output colour was the <em>source fill</em> rather than the expected dark teal. Lessons:</p>
+    <ul>
+      <li>Always test filter opacity at 100% first, then reduce — unexpected colours become immediately visible</li>
+      <li>The <code>operator="in"</code> composite reveals the <em>source colour</em> where alpha mask is opaque — so the source fill must already be the desired output colour</li>
+      <li>Filters with wide <code>x/y/width/height</code> regions can bleed outside clip paths, creating unexpected artefacts</li>
+    </ul>
+
+    <h2>24. What Would Improve the Hummingbird Further</h2>
+    <ul>
+      <li><strong>Single-path silhouette</strong> — eliminate the head-body gap by tracing the entire bird outline as one <code>&lt;path&gt;</code></li>
+      <li><strong>feTurbulence with feDisplacementMap</strong> — could warp the breast ellipse edge to simulate irregular feather fringing</li>
+      <li><strong>Iridescent colour shift</strong> — SVG <code>feColorMatrix</code> with hue-rotate could simulate the angle-dependent colour change of iridescent feathers</li>
+      <li><strong>Animation</strong> — <code>animateTransform</code> for a subtle breathing/settling motion of the perched bird</li>
+    </ul>
   </div>
 </body>
 </html>
