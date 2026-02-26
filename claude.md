@@ -2,7 +2,7 @@
 
 1. Read previous learning from lessons-learnt.html
 2. Open chrome
-3. Get a photo of a bird as reference from google images and save it to disk
+3. Get a photo of a bird as reference from google images and save it to disk, dont use images which are already drawn.
 4. Draw a bird in HTML + SVG
 5. View your own creation in Chrome
 6. Iterate
