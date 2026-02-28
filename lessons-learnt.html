@@ -249,6 +249,70 @@
       <li><strong>Iridescent colour shift</strong> — SVG <code>feColorMatrix</code> with hue-rotate could simulate the angle-dependent colour change of iridescent feathers</li>
       <li><strong>Animation</strong> — <code>animateTransform</code> for a subtle breathing/settling motion of the perched bird</li>
     </ul>
+
+    <h2>25. Extending SVG Beyond Birds: Food as Subject</h2>
+    <p>The omelette was the first non-bird subject — and it revealed that the core SVG toolkit transfers well to food illustration. Key differences from birds:</p>
+    <ul>
+      <li><strong>Food has no skeletal structure</strong> — the shape is entirely defined by its cooking/pouring process, producing irregular organic blobs rather than symmetric body plans</li>
+      <li><strong>Colour is the main cue</strong> — golden-orange for egg, blue-purple for plate, dark mahogany for wood; accurate colour palette matters more than anatomical accuracy</li>
+      <li><strong>Multiple props</strong> — a plated dish has garnishes, condiments, the plate itself, and the table, all requiring separate layers with correct z-ordering</li>
+      <li><strong>Texture cues matter enormously</strong> — a perfectly smooth gradient reads as plastic, not food; the <code>feTurbulence</code> overlay was essential to making the egg look cooked</li>
+    </ul>
+
+    <h2>26. Perspective with &lt;polygon&gt; for a Plate</h2>
+    <p>Representing a square plate viewed at a slight angle required a trapezoid (top edge narrower than bottom edge). Using a <code>&lt;polygon&gt;</code> with four carefully chosen points:</p>
+    <ul>
+      <li><code>points="155,178 545,178 590,460 110,460"</code> — top edge is 390px wide, bottom is 480px wide, creating a consistent vanishing-point illusion</li>
+      <li>A separate front edge polygon gives ceramic <strong>thickness</strong>: <code>"110,460 590,460 602,492 98,492"</code> — same width but shifted down and outward</li>
+      <li>Linear gradients applied to the polygon surface work correctly because SVG gradients respect the bounding box, not the polygon shape — this required adjusting gradient stop positions to match the visual surface</li>
+      <li>Adding an inner rim line (<code>&lt;polygon&gt;</code> with <code>fill="none"</code> and a faint stroke) sells the illusion of a raised ceramic edge</li>
+    </ul>
+
+    <h2>27. Flat vs Spherical Gradients for Food</h2>
+    <p>The single biggest visual error in Iteration 1 was using a <strong>radial gradient</strong> (bright centre, dark edges) on the omelette ellipse. This made it look like a shiny sphere, not a flat egg.</p>
+    <ul>
+      <li><strong>Radial gradient</strong>: centre-bright → reads as 3D sphere or bubble. Never use for flat food surfaces.</li>
+      <li><strong>Linear gradient top-to-bottom</strong>: mimics overhead lighting on a flat surface. The omelette used <code>linearGradient</code> from <code>#f8d855</code> (top) to <code>#9a5200</code> (bottom) — correctly simulating an overhead light source casting shadow toward the viewer.</li>
+      <li>Stack multiple gradients: a linear base + a radial brown patch (for pan-fried spots) + the turbulence overlay. Each layer adds one cue without fighting the others.</li>
+    </ul>
+
+    <h2>28. feTurbulence for Pan-Fried Texture</h2>
+    <p>The same <code>feTurbulence</code> technique that produced iridescent hummingbird spots works equally well for pan-fried egg texture. The configuration differs:</p>
+    <ul>
+      <li><strong>Lower seed number</strong> (seed="3") produces more blocky, contiguous patches — right for pan-fry marks rather than fine feather spots</li>
+      <li><strong>Lower baseFrequency</strong> (0.042 horizontal, 0.024 vertical — asymmetric) creates larger horizontal streaks that evoke cooked egg wrinkles</li>
+      <li><strong>Dark brown flood colour</strong> (<code>#8a4800</code>) for the fold overlay — darker than the base orange, suggesting browning from heat</li>
+      <li>Applied to a <code>&lt;rect&gt;</code> (not an ellipse) and clipped with <code>clipPath</code> to the omelette outline — the rect's fill colour determines the spot colour</li>
+      <li><strong>Key lesson</strong>: <code>feTurbulence</code> is a general organic texture generator. Its use cases extend well beyond bird plumage to any natural surface (pan marks, stone, bark, cloth).</li>
+    </ul>
+
+    <h2>29. The Render-Feedback Loop in Practice</h2>
+    <p>For the omelette, each of 5 iterations was rendered in Chrome, zoomed into key areas, and specific problems identified before writing the next iteration. This produced better results faster than speculating what would look good:</p>
+    <ul>
+      <li><strong>Iteration 1</strong>: Established gross composition; revealed the sphere-like gradient problem immediately</li>
+      <li><strong>Iteration 2</strong>: Fixed gradient and added turbulence texture; revealed stalks too thin and garnishes absent</li>
+      <li><strong>Iteration 3</strong>: Added garnishes and scattered bits; revealed garnishes running off the plate edge</li>
+      <li><strong>Iteration 4</strong>: Repositioned garnishes; revealed an errant table highlight ellipse creating an odd bright spot</li>
+      <li><strong>Iteration 5</strong>: Removed the artifact, added vignette and warm glow — composition felt finished</li>
+    </ul>
+    <p>Each iteration fixed <em>exactly the bugs visible in the screenshot</em>, rather than guessing. This is strictly better than single-pass SVG generation.</p>
+
+    <h2>30. Atmospheric Depth with Vignette + Warm Glow</h2>
+    <p>Two simple effects that dramatically improve the "photographic" feel of a scene:</p>
+    <ul>
+      <li><strong>Vignette</strong>: A <code>radialGradient</code> from transparent at centre to <code>rgba(0,0,0,0.55)</code> at the corners, applied as the topmost <code>&lt;rect&gt;</code> covering the entire SVG. This focuses the viewer's eye and mimics camera lens darkening. Cost: one element, zero filter overhead.</li>
+      <li><strong>Warm glow</strong>: A large semi-transparent amber ellipse drawn over the plate area with a heavy <code>feGaussianBlur</code> (stdDeviation="18") — simulates the warm light cast by a hot dish onto the surrounding surface. Keep opacity very low (0.07–0.10) or it overwhelms the scene.</li>
+      <li><strong>Wood grain</strong>: Two sets of nearly-invisible diagonal lines (opacity 0.05–0.06) at different angles create a believable wood texture at essentially zero render cost.</li>
+    </ul>
+
+    <h2>31. What Would Improve the Omelette Further</h2>
+    <ul>
+      <li><strong>Egg fold/roll</strong> — the reference omelette is folded; a visible crease down the centre with a slight elevation change (using a subtle lightening of one half) would add realism</li>
+      <li><strong>Plate shadow variation</strong> — currently the plate has uniform blue; a very subtle warm tinge near the omelette and cool blue at the far corners would improve the lighting story</li>
+      <li><strong>Oil sheen</strong> — a narrow, very bright linear highlight stroke across the omelette top would suggest that fresh-from-pan oiliness</li>
+      <li><strong>feDisplacementMap on omelette edge</strong> — to give the crispy edge more irregular, bubbly character rather than a clean stroke</li>
+      <li><strong>Depth of field blur</strong> — blurring the garnishes slightly (they're at the back of the plate) would give a bokeh-like photographic quality</li>
+    </ul>
   </div>
 </body>
 </html>

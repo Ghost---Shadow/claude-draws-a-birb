@@ -25,6 +25,14 @@
 - **URL**: https://www.stockvault.net/photo/202359/hummingbird-on-the-branch
 - **Usage**: Used as reference for SVG drawing of hummingbird
 
+## omelette.jpg
+- **Source**: Stockvault.net
+- **Title**: Plain Omelet with Spring Onions
+- **Author**: Ivan
+- **License**: Non-Commercial
+- **URL**: https://www.stockvault.net/photo/144290/plain-omelet-with-spring-onions
+- **Usage**: Used as reference for SVG drawing of Thai omelette
+
 ---
 
 All reference images are used for educational purposes in accordance with their respective licenses.

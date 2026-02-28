@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws an Omelette</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.4rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .subtitle {
+      color: #8a7a60;
+      font-style: italic;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+    svg {
+      border-radius: 12px;
+      box-shadow: 0 16px 50px rgba(0,0,0,0.7);
+    }
+    .compare {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      margin-top: 2.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .compare-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .compare-label {
+      font-size: 0.78rem;
+      color: #6a5a44;
+      font-style: italic;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .compare-panel img {
+      width: 340px;
+      height: 272px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+    }
+    .compare-panel svg {
+      width: 340px;
+      height: 272px;
+    }
+    footer {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: #5a4a3a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws an Omelette</h1>
+  <p class="subtitle">Golden Thai omelette with spring onions, cucumber, and tomato — SVG in 5 iterations</p>
+
+  <svg width="700" height="560" viewBox="0 0 700 560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+
+      <!-- Table gradient — rich mahogany -->
+      <linearGradient id="tableGrad" x1="0.1" y1="0" x2="0.9" y2="1">
+        <stop offset="0%"   stop-color="#301e0e"/>
+        <stop offset="35%"  stop-color="#3f2616"/>
+        <stop offset="70%"  stop-color="#2a1810"/>
+        <stop offset="100%" stop-color="#160c06"/>
+      </linearGradient>
+
+      <!-- Vignette — dark corners for photographic framing -->
+      <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+        <stop offset="0%"   stop-color="rgba(0,0,0,0)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.55)"/>
+      </radialGradient>
+
+      <!-- Plate surface gradient -->
+      <linearGradient id="plateGrad" x1="0.1" y1="0" x2="0.9" y2="1">
+        <stop offset="0%"   stop-color="#8898d0"/>
+        <stop offset="45%"  stop-color="#6270b8"/>
+        <stop offset="100%" stop-color="#3a4090"/>
+      </linearGradient>
+
+      <!-- Plate specular diagonal -->
+      <linearGradient id="plateSpecular" x1="0" y1="0" x2="1" y2="0.8">
+        <stop offset="0%"   stop-color="rgba(255,255,255,0.22)"/>
+        <stop offset="40%"  stop-color="rgba(255,255,255,0.08)"/>
+        <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+      </linearGradient>
+
+      <!-- Plate front edge -->
+      <linearGradient id="plateEdgeGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#3a4285"/>
+        <stop offset="100%" stop-color="#1e2248"/>
+      </linearGradient>
+
+      <!-- Plate edge specular -->
+      <linearGradient id="edgeSpecular" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="rgba(120,140,200,0.35)"/>
+        <stop offset="50%"  stop-color="rgba(120,140,200,0.12)"/>
+        <stop offset="100%" stop-color="rgba(120,140,200,0)"/>
+      </linearGradient>
+
+      <!-- Omelette base gradient -->
+      <linearGradient id="omeletteGrad" x1="0.45" y1="0" x2="0.55" y2="1">
+        <stop offset="0%"   stop-color="#f8d855"/>
+        <stop offset="30%"  stop-color="#ecb025"/>
+        <stop offset="65%"  stop-color="#cc7812"/>
+        <stop offset="100%" stop-color="#9a5200"/>
+      </linearGradient>
+
+      <!-- Omelette warm glow (freshly cooked) -->
+      <radialGradient id="omeletteWarmGlow" cx="40%" cy="38%" r="65%">
+        <stop offset="0%"   stop-color="rgba(255,220,100,0.25)"/>
+        <stop offset="100%" stop-color="rgba(255,180,50,0)"/>
+      </radialGradient>
+
+      <!-- Brown pan-fried patches -->
+      <radialGradient id="brownPatch" cx="62%" cy="58%" r="42%">
+        <stop offset="0%"   stop-color="rgba(130,55,0,0.42)"/>
+        <stop offset="100%" stop-color="rgba(130,55,0,0)"/>
+      </radialGradient>
+
+      <radialGradient id="brownPatch2" cx="28%" cy="45%" r="30%">
+        <stop offset="0%"   stop-color="rgba(110,48,0,0.30)"/>
+        <stop offset="100%" stop-color="rgba(110,48,0,0)"/>
+      </radialGradient>
+
+      <!-- AO at omelette bottom -->
+      <linearGradient id="omeletteAO" x1="0.5" y1="0" x2="0.5" y2="1">
+        <stop offset="0%"   stop-color="rgba(80,30,0,0)"/>
+        <stop offset="72%"  stop-color="rgba(80,30,0,0)"/>
+        <stop offset="100%" stop-color="rgba(60,20,0,0.38)"/>
+      </linearGradient>
+
+      <!-- Omelette specular highlight top-left -->
+      <radialGradient id="omeletteSpecular" cx="28%" cy="22%" r="45%">
+        <stop offset="0%"   stop-color="rgba(255,248,195,0.40)"/>
+        <stop offset="100%" stop-color="rgba(255,248,195,0)"/>
+      </radialGradient>
+
+      <!-- Omelette clip -->
+      <clipPath id="omeletteClip">
+        <path d="
+          M 205,335
+          C 190,278 212,225 262,212
+          C 298,202 340,197 388,206
+          C 432,215 477,232 495,270
+          C 514,310 510,352 497,383
+          C 482,418 450,442 406,450
+          C 366,456 320,452 278,438
+          C 232,422 212,392 205,335 Z
+        "/>
+      </clipPath>
+
+      <!-- feTurbulence wrinkle texture -->
+      <filter id="eggTexture" x="-5%" y="-5%" width="110%" height="110%"
+              color-interpolation-filters="sRGB">
+        <feTurbulence type="turbulence" baseFrequency="0.042 0.024"
+                      numOctaves="4" seed="3" result="noise"/>
+        <feColorMatrix type="matrix"
+          values="0 0 0 0 0
+                  0 0 0 0 0
+                  0 0 0 0 0
+                  6 0 0 0 -2.8"
+          in="noise" result="foldAlpha"/>
+        <feFlood flood-color="#8a4800" flood-opacity="0.5" result="foldColor"/>
+        <feComposite in="foldColor" in2="foldAlpha" operator="in" result="foldMask"/>
+        <feComposite in="foldMask" in2="SourceGraphic" operator="over"/>
+      </filter>
+
+      <!-- Warm glow blur (for omelette halo) -->
+      <filter id="warmGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="18" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+
+      <!-- Drop shadow -->
+      <filter id="dropShadow" x="-15%" y="-15%" width="130%" height="140%">
+        <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="rgba(0,0,0,0.55)"/>
+      </filter>
+
+      <!-- Plate shadow -->
+      <filter id="plateShadow" x="-8%" y="-8%" width="116%" height="130%">
+        <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="rgba(0,0,0,0.50)"/>
+      </filter>
+
+      <!-- Soft glow filter -->
+      <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="5" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+
+      <!-- Tomato gradient -->
+      <radialGradient id="tomatoGrad" cx="35%" cy="30%" r="65%">
+        <stop offset="0%"   stop-color="#ff7060"/>
+        <stop offset="55%"  stop-color="#e02818"/>
+        <stop offset="100%" stop-color="#9c1608"/>
+      </radialGradient>
+
+      <!-- Cucumber gradient -->
+      <radialGradient id="cucumberGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"   stop-color="#b0e078"/>
+        <stop offset="65%"  stop-color="#7cc045"/>
+        <stop offset="100%" stop-color="#508828"/>
+      </radialGradient>
+
+    </defs>
+
+    <!-- ── TABLE ── -->
+    <rect width="700" height="560" fill="url(#tableGrad)"/>
+
+    <!-- Wood grain lines — warm amber tones -->
+    <g opacity="0.06" stroke="#c09050" stroke-width="1.3">
+      <line x1="0" y1="70"  x2="700" y2="98"/>
+      <line x1="0" y1="165" x2="700" y2="188"/>
+      <line x1="0" y1="275" x2="700" y2="295"/>
+      <line x1="0" y1="385" x2="700" y2="400"/>
+      <line x1="0" y1="478" x2="700" y2="490"/>
+    </g>
+    <!-- Subtle cross-grain lines -->
+    <g opacity="0.03" stroke="#b08040" stroke-width="0.8">
+      <line x1="120" y1="0" x2="100" y2="560"/>
+      <line x1="280" y1="0" x2="268" y2="560"/>
+      <line x1="430" y1="0" x2="422" y2="560"/>
+      <line x1="590" y1="0" x2="582" y2="560"/>
+    </g>
+
+    <!-- Warm ambient glow from omelette onto table (diffuse light leaking off plate) -->
+    <ellipse cx="350" cy="420" rx="260" ry="110"
+             fill="rgba(200,140,30,0.07)" filter="url(#warmGlow)"/>
+
+    <!-- ── PLATE ── -->
+    <!-- Plate table shadow -->
+    <ellipse cx="352" cy="500" rx="250" ry="25" fill="rgba(0,0,0,0.40)"/>
+
+    <!-- Plate front edge -->
+    <polygon points="110,460  590,460  602,492  98,492"
+             fill="url(#plateEdgeGrad)"/>
+    <polygon points="110,460  590,460  602,492  98,492"
+             fill="url(#edgeSpecular)"/>
+
+    <!-- Plate top surface -->
+    <polygon points="155,178  545,178  590,460  110,460"
+             fill="url(#plateGrad)"
+             filter="url(#plateShadow)"/>
+
+    <!-- Plate specular (diagonal from top-left) -->
+    <polygon points="155,178  545,178  590,460  110,460"
+             fill="url(#plateSpecular)"/>
+
+    <!-- Plate inner rim -->
+    <polygon points="170,195  530,195  572,445  128,445"
+             fill="none"
+             stroke="rgba(200,215,245,0.2)" stroke-width="2"/>
+
+    <!-- Plate top rim highlight -->
+    <polygon points="155,178  545,178  549,196  151,196"
+             fill="rgba(255,255,255,0.18)"/>
+
+    <!-- Plate bottom edge in shadow -->
+    <polygon points="128,445  572,445  590,460  110,460"
+             fill="rgba(0,0,30,0.18)"/>
+
+    <!-- ── OMELETTE ── -->
+    <!-- Cast shadow on plate -->
+    <ellipse cx="358" cy="452" rx="178" ry="17"
+             fill="rgba(0,0,0,0.30)"/>
+
+    <!-- Warm glow halo on plate under omelette (freshly cooked warmth) -->
+    <ellipse cx="352" cy="330" rx="200" ry="140"
+             fill="rgba(220,140,20,0.10)" filter="url(#softGlow)"/>
+
+    <!-- Omelette base -->
+    <g filter="url(#dropShadow)">
+      <path d="
+        M 205,335
+        C 190,278 212,225 262,212
+        C 298,202 340,197 388,206
+        C 432,215 477,232 495,270
+        C 514,310 510,352 497,383
+        C 482,418 450,442 406,450
+        C 366,456 320,452 278,438
+        C 232,422 212,392 205,335 Z
+      " fill="url(#omeletteGrad)"/>
+    </g>
+
+    <!-- Brown pan-fried patches -->
+    <path d="
+      M 205,335
+      C 190,278 212,225 262,212
+      C 298,202 340,197 388,206
+      C 432,215 477,232 495,270
+      C 514,310 510,352 497,383
+      C 482,418 450,442 406,450
+      C 366,456 320,452 278,438
+      C 232,422 212,392 205,335 Z
+    " fill="url(#brownPatch)"/>
+    <path d="
+      M 205,335
+      C 190,278 212,225 262,212
+      C 298,202 340,197 388,206
+      C 432,215 477,232 495,270
+      C 514,310 510,352 497,383
+      C 482,418 450,442 406,450
+      C 366,456 320,452 278,438
+      C 232,422 212,392 205,335 Z
+    " fill="url(#brownPatch2)"/>
+
+    <!-- AO darkening at bottom edge -->
+    <path d="
+      M 205,335
+      C 190,278 212,225 262,212
+      C 298,202 340,197 388,206
+      C 432,215 477,232 495,270
+      C 514,310 510,352 497,383
+      C 482,418 450,442 406,450
+      C 366,456 320,452 278,438
+      C 232,422 212,392 205,335 Z
+    " fill="url(#omeletteAO)"/>
+
+    <!-- feTurbulence wrinkle texture -->
+    <rect x="190" y="195" width="332" height="270"
+          fill="#e8a820"
+          clip-path="url(#omeletteClip)"
+          filter="url(#eggTexture)"
+          opacity="0.72"/>
+
+    <!-- Warm glow overlay -->
+    <path d="
+      M 205,335
+      C 190,278 212,225 262,212
+      C 298,202 340,197 388,206
+      C 432,215 477,232 495,270
+      C 514,310 510,352 497,383
+      C 482,418 450,442 406,450
+      C 366,456 320,452 278,438
+      C 232,422 212,392 205,335 Z
+    " fill="url(#omeletteWarmGlow)"/>
+
+    <!-- Top-left specular highlight -->
+    <path d="
+      M 205,335
+      C 190,278 212,225 262,212
+      C 298,202 340,197 388,206
+      C 432,215 477,232 495,270
+      C 514,310 510,352 497,383
+      C 482,418 450,442 406,450
+      C 366,456 320,452 278,438
+      C 232,422 212,392 205,335 Z
+    " fill="url(#omeletteSpecular)"/>
+
+    <!-- Crispy darker edge -->
+    <path d="
+      M 205,335
+      C 190,278 212,225 262,212
+      C 298,202 340,197 388,206
+      C 432,215 477,232 495,270
+      C 514,310 510,352 497,383
+      C 482,418 450,442 406,450
+      C 366,456 320,452 278,438
+      C 232,422 212,392 205,335 Z
+    " fill="none"
+       stroke="#7a3800" stroke-width="4" opacity="0.68"/>
+
+    <!-- Very thin bright edge at the top (egg cooked over fire) -->
+    <path d="M 262,212 C 298,202 340,197 388,206 C 432,215 477,232 495,270"
+          fill="none" stroke="rgba(255,230,120,0.3)" stroke-width="1.5"
+          stroke-linecap="round"/>
+
+    <!-- Fold line highlights -->
+    <path d="M 268,218 C 310,240 382,256 440,280"
+          fill="none" stroke="rgba(255,235,130,0.30)" stroke-width="5"
+          stroke-linecap="round" filter="url(#softGlow)"/>
+
+    <!-- ── SCATTERED SPRING ONION BITS (oval + some stick-like) ── -->
+    <!-- Round chopped pieces -->
+    <g fill="#5a9832" opacity="0.9">
+      <ellipse cx="295" cy="275" rx="9"   ry="4.5" transform="rotate(-15 295 275)"/>
+      <ellipse cx="342" cy="258" rx="8"   ry="4"   transform="rotate(10 342 258)"/>
+      <ellipse cx="388" cy="267" rx="10"  ry="4"   transform="rotate(-8 388 267)"/>
+      <ellipse cx="422" cy="296" rx="7"   ry="3.2" transform="rotate(20 422 296)"/>
+      <ellipse cx="308" cy="316" rx="8"   ry="3.5" transform="rotate(-20 308 316)"/>
+      <ellipse cx="362" cy="342" rx="9"   ry="4"   transform="rotate(5 362 342)"/>
+      <ellipse cx="418" cy="342" rx="7"   ry="3"   transform="rotate(-12 418 342)"/>
+      <ellipse cx="263" cy="352" rx="8"   ry="3.3" transform="rotate(15 263 352)"/>
+      <ellipse cx="445" cy="375" rx="8"   ry="3.2" transform="rotate(-5 445 375)"/>
+      <ellipse cx="330" cy="393" rx="7"   ry="3"   transform="rotate(18 330 393)"/>
+      <ellipse cx="372" cy="220" rx="7"   ry="3.2" transform="rotate(-5 372 220)"/>
+      <ellipse cx="248" cy="300" rx="7.5" ry="3.2" transform="rotate(12 248 300)"/>
+      <ellipse cx="460" cy="318" rx="6.5" ry="3"   transform="rotate(-8 460 318)"/>
+      <ellipse cx="285" cy="420" rx="6.5" ry="3"   transform="rotate(8 285 420)"/>
+    </g>
+    <!-- Longer stick-like pieces (sliced spring onion rings/tubes) -->
+    <g fill="#5a9832" opacity="0.85">
+      <ellipse cx="318" cy="240" rx="13"  ry="3.5" transform="rotate(-18 318 240)"/>
+      <ellipse cx="455" cy="260" rx="12"  ry="3.5" transform="rotate(8 455 260)"/>
+      <ellipse cx="240" cy="335" rx="11"  ry="3.2" transform="rotate(-10 240 335)"/>
+      <ellipse cx="430" cy="410" rx="11"  ry="3"   transform="rotate(12 430 410)"/>
+    </g>
+    <!-- Highlights on bits -->
+    <g fill="rgba(150,230,90,0.45)">
+      <ellipse cx="295" cy="273" rx="5.5" ry="2.5" transform="rotate(-15 295 273)"/>
+      <ellipse cx="388" cy="265" rx="6"   ry="2.2" transform="rotate(-8 388 265)"/>
+      <ellipse cx="362" cy="340" rx="5.5" ry="2"   transform="rotate(5 362 340)"/>
+      <ellipse cx="342" cy="256" rx="5"   ry="2"   transform="rotate(10 342 256)"/>
+      <ellipse cx="318" cy="238" rx="8"   ry="2"   transform="rotate(-18 318 238)"/>
+    </g>
+
+    <!-- ── SPRING ONION STALKS ── -->
+    <!-- Stalk 1 -->
+    <line x1="148" y1="388" x2="550" y2="252"
+          stroke="#4a8832" stroke-width="6.5" stroke-linecap="round"/>
+    <line x1="148" y1="388" x2="550" y2="252"
+          stroke="rgba(130,215,80,0.42)" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Stalk 2 -->
+    <line x1="155" y1="368" x2="546" y2="235"
+          stroke="#3e7828" stroke-width="5" stroke-linecap="round"/>
+    <line x1="155" y1="368" x2="546" y2="235"
+          stroke="rgba(110,195,70,0.36)" stroke-width="2.2" stroke-linecap="round"/>
+
+    <!-- Root bulbs — slightly more detailed -->
+    <ellipse cx="150" cy="386" rx="11"  ry="7"   fill="#e8f2d8" transform="rotate(-22 150 386)"/>
+    <ellipse cx="150" cy="386" rx="6.5" ry="3.8" fill="rgba(255,255,255,0.65)" transform="rotate(-22 150 386)"/>
+    <ellipse cx="150" cy="387" rx="3"   ry="1.5" fill="rgba(200,220,180,0.5)" transform="rotate(-22 150 387)"/>
+
+    <ellipse cx="157" cy="367" rx="9.5" ry="6.5" fill="#e0ecd0" transform="rotate(-22 157 367)"/>
+    <ellipse cx="157" cy="367" rx="5.5" ry="3.5" fill="rgba(255,255,255,0.58)" transform="rotate(-22 157 367)"/>
+
+    <!-- Green tips — fan out more naturally -->
+    <line x1="550" y1="252" x2="582" y2="236" stroke="#6ab040" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="550" y1="252" x2="570" y2="245" stroke="#5aa030" stroke-width="3" stroke-linecap="round"/>
+    <line x1="550" y1="252" x2="576" y2="258" stroke="#4a9028" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="546" y1="235" x2="578" y2="219" stroke="#62a838" stroke-width="4" stroke-linecap="round"/>
+    <line x1="546" y1="235" x2="567" y2="228" stroke="#52982a" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- ── GARNISHES ── -->
+    <!-- Lettuce leaf -->
+    <path d="
+      M 420,198 C 436,188 462,185 472,195
+      C 482,204 478,218 468,223
+      C 456,228 444,222 434,226
+      C 423,230 414,237 410,229
+      C 406,221 410,207 420,198 Z
+    " fill="#6ab840" opacity="0.88"/>
+    <path d="
+      M 420,198 C 436,188 462,185 472,195
+      C 482,204 478,218 468,223
+      C 456,228 444,222 434,226
+      C 423,230 414,237 410,229
+      C 406,221 410,207 420,198 Z
+    " fill="rgba(160,240,100,0.25)"/>
+    <path d="M 422,200 C 436,208 450,214 466,220"
+          fill="none" stroke="rgba(160,240,100,0.4)" stroke-width="1.8"/>
+    <!-- Leaf shadow -->
+    <path d="M 422,226 C 432,228 445,226 456,224"
+          fill="none" stroke="rgba(30,80,10,0.3)" stroke-width="1.2"/>
+
+    <!-- Cucumber slice -->
+    <ellipse cx="447" cy="232" rx="25" ry="16" fill="url(#cucumberGrad)"/>
+    <ellipse cx="447" cy="232" rx="17" ry="10" fill="#ccea98" opacity="0.68"/>
+    <g fill="rgba(210,248,160,0.82)">
+      <ellipse cx="447" cy="226" rx="3"   ry="2.2"/>
+      <ellipse cx="454" cy="232" rx="2.8" ry="2.2"/>
+      <ellipse cx="447" cy="238" rx="3"   ry="2.2"/>
+      <ellipse cx="440" cy="232" rx="2.8" ry="2.2"/>
+    </g>
+    <ellipse cx="447" cy="232" rx="25" ry="16"
+             fill="none" stroke="#408820" stroke-width="1.5"/>
+    <!-- Cucumber specular -->
+    <ellipse cx="440" cy="227" rx="8" ry="5" fill="rgba(220,255,180,0.28)"/>
+
+    <!-- Tomato half -->
+    <path d="M 462,208 A 23,19 0 0 1 508,208 L 508,216
+             C 508,234 485,247 485,247
+             C 485,247 462,234 462,216 Z"
+          fill="url(#tomatoGrad)"/>
+    <ellipse cx="485" cy="208" rx="23" ry="6.5" fill="#ff9880" opacity="0.58"/>
+    <g fill="rgba(255,205,185,0.52)">
+      <ellipse cx="478" cy="219" rx="5.5" ry="7.5" transform="rotate(-12 478 219)"/>
+      <ellipse cx="492" cy="219" rx="5.5" ry="7.5" transform="rotate(12 492 219)"/>
+      <ellipse cx="485" cy="230" rx="4.5" ry="5.5"/>
+    </g>
+    <g fill="rgba(255,245,235,0.85)">
+      <ellipse cx="477" cy="216" rx="2.2" ry="2.8"/>
+      <ellipse cx="493" cy="216" rx="2.2" ry="2.8"/>
+      <ellipse cx="485" cy="228" rx="2.2" ry="2.8"/>
+    </g>
+    <!-- Tomato surface highlight -->
+    <ellipse cx="472" cy="206" rx="9" ry="4.5" fill="rgba(255,180,160,0.28)"/>
+    <!-- Stem -->
+    <path d="M 483,204 C 484,199 488,197 489,200"
+          fill="none" stroke="#285010" stroke-width="2.2" stroke-linecap="round"/>
+
+    <!-- ── VIGNETTE OVERLAY (drawn last for photographic framing) ── -->
+    <rect width="700" height="560" fill="url(#vignette)" rx="12"/>
+
+  </svg>
+
+  <div class="compare">
+    <div class="compare-panel">
+      <span class="compare-label">Reference photo</span>
+      <img src="images/omelette.jpg" alt="Reference: Plain Omelet with Spring Onions by Ivan on Stockvault.net">
+    </div>
+    <div class="compare-panel" id="svg-clone-target">
+      <span class="compare-label">SVG drawing</span>
+    </div>
+  </div>
+  <script>
+    const orig = document.querySelector('svg');
+    const clone = orig.cloneNode(true);
+    document.getElementById('svg-clone-target').appendChild(clone);
+  </script>
+
+  <footer>
+    Reference: "Plain Omelet with Spring Onions" by Ivan — Stockvault.net (Non-Commercial) &bull;
+    SVG by Claude (Anthropic) &bull; 2026
+  </footer>
+</body>
+</html>
