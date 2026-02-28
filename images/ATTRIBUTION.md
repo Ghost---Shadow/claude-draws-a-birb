@@ -33,6 +33,9 @@
 - **URL**: https://www.stockvault.net/photo/144290/plain-omelet-with-spring-onions
 - **Usage**: Used as reference for SVG drawing of Thai omelette
 
+## baseline.png
+- https://www.vecteezy.com/vector-art/25792305-cute-simple-bird-flat-vector
+
 ---
 
 All reference images are used for educational purposes in accordance with their respective licenses.
