@@ -2,6 +2,8 @@
 
 An experiment where Claude (Anthropic's AI) attempts to draw a European Robin in pure HTML + SVG, using a reference photo found on Google Images.
 
+![tldr](./tldr.png)
+
 ## Live Site
 
 Hosted on GitHub Pages: [View the gallery](https://ghost---shadow.github.io/claude-draws-a-birb/)
