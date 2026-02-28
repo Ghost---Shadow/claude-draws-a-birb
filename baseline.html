@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Baseline Bird</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb - Flat Bird</h1>
+
+  <div class="controls">
+    <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label">My SVG Drawing (Flat Geometric Bird)</div>
+      <svg id="myDrawing" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Very subtle linear shading on orange body — lighter top-right, slightly darker bottom-left -->
+          <linearGradient id="bodyShade" x1="80%" y1="20%" x2="20%" y2="90%">
+            <stop offset="0%" stop-color="#F09060"/>
+            <stop offset="100%" stop-color="#D86838"/>
+          </linearGradient>
+          <!-- Yellow belly blends into the orange at the top -->
+          <linearGradient id="bellyShade" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#F5A028"/>
+            <stop offset="100%" stop-color="#F4B830"/>
+          </linearGradient>
+        </defs>
+
+        <!-- =================== SHADOW =================== -->
+        <ellipse cx="268" cy="442" rx="80" ry="7" fill="#c0c5cc" opacity="0.5"/>
+
+        <!-- =================== TAIL (elongated, more prominent) =================== -->
+        <path d="M 142,318 Q 88,352 68,376 Q 82,390 98,380 L 152,340 Z"
+              fill="#E06040"/>
+
+        <!-- =================== BODY (warm orange with subtle shading) =================== -->
+        <ellipse cx="248" cy="295" rx="148" ry="118" fill="url(#bodyShade)"/>
+
+        <!-- =================== YELLOW BELLY (golden lower crescent) =================== -->
+        <ellipse cx="242" cy="376" rx="105" ry="48" fill="url(#bellyShade)"/>
+
+        <!-- =================== DARK WING =================== -->
+        <path d="
+          M 310,208
+          Q 280,180 220,165
+          Q 160,155 125,194
+          Q 108,218 108,260
+          L 110,328
+          Q 128,358 160,366
+          Q 190,370 218,360
+          Q 242,348 252,318
+          Q 260,288 258,252
+          Q 256,226 310,208
+          Z"
+              fill="#1D2B3A"/>
+
+        <!-- =================== BLUE-GRAY STRIP =================== -->
+        <path d="
+          M 310,208
+          Q 280,180 220,165
+          Q 160,155 125,194
+          Q 108,216 110,244
+          Q 136,226 170,214
+          Q 212,202 260,204
+          Q 288,206 310,208
+          Z"
+              fill="#90B4BC"/>
+
+        <!-- =================== HEAD =================== -->
+        <circle cx="355" cy="182" r="70" fill="#1D2B3A"/>
+
+        <!-- =================== EYE =================== -->
+        <circle cx="376" cy="173" r="15" fill="white"/>
+        <circle cx="378" cy="174" r="5.5" fill="#1D2B3A"/>
+
+        <!-- =================== BEAK =================== -->
+        <path d="M 414,183 L 460,190 L 414,197 Z" fill="#1D2B3A"/>
+
+        <!-- =================== LEGS =================== -->
+        <rect x="245" y="397" width="11" height="42" rx="5" fill="#1D2B3A"/>
+        <rect x="226" y="434" width="36" height="9" rx="4" fill="#1D2B3A"/>
+        <rect x="278" y="395" width="11" height="42" rx="5" fill="#1D2B3A"/>
+        <rect x="260" y="431" width="36" height="9" rx="4" fill="#1D2B3A"/>
+      </svg>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference</div>
+      <img id="referenceImg" src="images/baseline.jpg" alt="Flat geometric bird reference">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    <p>Reference: <a href="https://www.vecteezy.com/vector-art/25792305-cute-simple-bird-flat-vector" target="_blank" rel="noopener">"Cute Simple Bird Flat Vector"</a> on Vecteezy (Free License)</p>
+    <p><a href="images/ATTRIBUTION.md">View full image credits</a> &bull; <a href="lessons-learnt.html">Lessons Learnt</a></p>
+  </div>
+
+  <script>
+    let flipped = false;
+    function flipBoth() {
+      flipped = !flipped;
+      const transform = flipped ? 'scaleX(-1)' : 'scaleX(1)';
+      document.getElementById('myDrawing').style.transform = transform;
+      document.getElementById('referenceImg').style.transform = transform;
+    }
+  </script>
+</body>
+</html>

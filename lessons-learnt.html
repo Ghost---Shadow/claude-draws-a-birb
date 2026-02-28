@@ -50,23 +50,17 @@
       border-radius: 4px;
       font-size: 0.85rem;
     }
-    .comparison {
-      display: flex;
-      gap: 1rem;
-      margin: 1.5rem 0;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .comparison img, .comparison svg {
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .comparison .cap {
-      font-size: 0.8rem;
-      color: #a09880;
-      text-align: center;
-      margin-top: 0.3rem;
-      font-style: italic;
+    .session-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      background: rgba(255,255,255,0.08);
+      color: #a8b890;
+      border-radius: 3px;
+      padding: 0.1rem 0.45rem;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+      font-family: monospace;
+      letter-spacing: 0.03em;
     }
   </style>
 </head>
@@ -75,244 +69,77 @@
   <h1>Lessons Learnt</h1>
 
   <div class="content">
-    <h2>1. Match Proportions First</h2>
-    <p>The single most impactful change was getting the <strong>volume, height, and overall proportions</strong> right before worrying about details. The first freehand attempt had a bird that was far too small within its frame. Once the body was scaled to fill the canvas like the reference photo, everything else fell into place more naturally.</p>
 
-    <h2>2. Direction Matters</h2>
-    <p>The reference bird faces the camera head-on, slightly turned right. The initial SVG faced left. Flipping with <code>transform="translate(w,0) scale(-1,1)"</code> fixed this instantly, but it's better to get the direction right from the start.</p>
-
-    <h2>3. The Artist Mirror Technique Works</h2>
-    <p>Adding a "Flip Both" button that mirrors both the drawing and reference simultaneously was inspired by a real artist technique. When you flip an image, proportional errors that your brain had adapted to become immediately obvious. This revealed issues in the belly shape and head-to-body ratio that weren't visible in the normal orientation.</p>
-
-    <h2>4. Tracing Beats Freehand (For Accuracy)</h2>
-    <p>The freehand approach produced a charming illustration, but the <strong>traced version</strong> &mdash; where the SVG viewBox matched the photo's pixel dimensions (516&times;780) &mdash; produced much better proportions. Using the reference image as a semi-transparent overlay made it possible to verify alignment in real-time.</p>
-
-    <h2>5. Belly Blending is Hard</h2>
-    <p>The hardest part was the transition from the vivid orange breast to the white belly. In the real bird, this is achieved by hundreds of overlapping feathers in varying shades. In SVG, the closest approximation uses:</p>
+    <!-- ================================================== -->
+    <h2>Proportions &amp; Orientation</h2>
     <ul>
-      <li>A <code>linearGradient</code> from orange to cream over the front clip region</li>
-      <li>Overlapping blurred ellipses from the brown sides</li>
-      <li>A <code>clipPath</code> to contain the belly area</li>
-      <li>Multiple <code>feGaussianBlur</code> filters at different radii</li>
-    </ul>
-    <p>Even with all of this, the result is smoother than real feathers. SVG simply doesn't have a good primitive for "irregular feathered edges."</p>
-
-    <h2>6. Gradients Are Everything</h2>
-    <p>The difference between a flat, cartoony bird and one that looks somewhat natural comes down to <strong>radial and linear gradients</strong>. Every major area (body, head, breast, wing, belly) uses its own gradient. The bird has around 10 gradient definitions &mdash; and could use more.</p>
-
-    <h2>7. Subtle Details Add Up</h2>
-    <p>Individually, these are nearly invisible. Together they make the bird feel real:</p>
-    <ul>
-      <li>Feather texture lines at 10-15% opacity</li>
-      <li>A darker crown on the head</li>
-      <li>A grey-brown ring around the orange face patch</li>
-      <li>White splotches in the orange (visible in the reference)</li>
-      <li>A secondary eye highlight at low opacity</li>
-      <li>Bark texture lines on the branch</li>
+      <li><strong>Proportions first, details second.</strong> Scale the body to fill the canvas like the reference before touching colour or texture. Wrong proportions make every subsequent fix harder.</li>
+      <li><strong>Each species has defining proportions.</strong> Hummingbird beak ≈50% of body height; blue jay crest is a distinct pointed spike; flat-design robin has orange as the dominant colour (~55% of body). Study these before drawing.</li>
+      <li><strong>The artist mirror technique.</strong> Flipping both the drawing and the reference simultaneously reveals proportional errors your brain has adapted to. Use <code>transform="translate(w,0) scale(-1,1)"</code>.</li>
     </ul>
 
-    <h2>8. SVG Filter Limitations</h2>
-    <p><code>feGaussianBlur</code> is the workhorse for soft edges, but it creates uniformly smooth transitions. Real feathers have <strong>irregular, directional</strong> softness. SVG doesn't have a "feather edge" filter, so approximation with multiple overlapping blurred shapes is the best available option.</p>
-
-    <h2>9. What Would Improve It Further</h2>
+    <!-- ================================================== -->
+    <h2>Head–Body Connection</h2>
     <ul>
-      <li><strong>More path detail</strong> &mdash; hand-tracing individual feather groups instead of using ellipses</li>
-      <li><strong>SVG turbulence filters</strong> &mdash; <code>feTurbulence</code> could add organic texture to the feather areas</li>
-      <li><strong>Clipping per-feather-group</strong> &mdash; separate clip regions for breast, belly, and flanks</li>
-      <li><strong>More color stops</strong> &mdash; the orange-to-white transition could use 8-10 stops instead of 5</li>
-      <li><strong>Ambient occlusion</strong> &mdash; subtle shadows where the head meets the body and under the wing</li>
+      <li><strong>Separate circle + ellipse always looks disconnected.</strong> The real fix is a single <code>&lt;path&gt;</code> for the whole silhouette, with colour regions overlaid on top.</li>
+      <li><strong>Seam fix for same-colour shapes (flat design).</strong> Place the wing path's anchor <em>inside</em> the head circle — the head, drawn later, covers the overlap and seals the gap. Test: <code>sqrt((wx−hx)²+(wy−hy)²) &lt; head_radius</code>. Keep ≥10 px inside for margin.</li>
     </ul>
 
-    <h2>10. Iteration 3: Drawing a Blue Jay (Different Species)</h2>
-    <p>After mastering the robin, the next challenge was drawing a <strong>completely different bird</strong> &mdash; the Blue Jay. This revealed new technical and artistic challenges:</p>
-
-    <h2>11. The Crest Problem</h2>
-    <p>The blue jay's most distinctive feature is its sharp, pointed <strong>crest</strong> on top of its head. Unlike the robin's soft rounded head, the crest required:</p>
+    <!-- ================================================== -->
+    <h2>SVG Filters &amp; Texture</h2>
     <ul>
-      <li>Multiple overlapping path elements to create the feathery appearance</li>
-      <li>Different angles and rotations for each "feather" in the crest</li>
-      <li>Careful layering to avoid flattening the 3D effect</li>
-      <li>Subtle color variations between crest feathers (#1a3a5c, #1f4a7a, #2563b8)</li>
-    </ul>
-    <p>A single ellipse or circle couldn't capture the sharp, pointed nature. <strong>Three separate paths</strong> work better, though a hand-traced spline would be more accurate.</p>
-
-    <h2>12. Color Complexity Increases with Species</h2>
-    <p>The robin had 3-4 primary colors. The blue jay has <strong>more:</strong></p>
-    <ul>
-      <li><strong>Bright blue</strong> (wings, back) &mdash; #5a9ef5, #2a5fa3, #0f2840 (gradient)</li>
-      <li><strong>White/cream</strong> (belly, face) &mdash; #f5f5f5, #ffffff</li>
-      <li><strong>Peachy/tan</strong> (chest patch) &mdash; #f8b578, #f0a060</li>
-      <li><strong>Black</strong> (mask, eye, beak) &mdash; #1a1a1a</li>
-      <li><strong>Brown</strong> (branch) &mdash; #9a7d52, #5a3f1f</li>
-    </ul>
-    <p>Managing these colors with gradients and opacity required more careful planning than the robin's simpler palette.</p>
-
-    <h2>13. Feather Pattern Complexity</h2>
-    <p>Blue jays have <strong>highly visible feather patterns</strong> on their wings and body. The robin had subtle texture; the blue jay demands visible <strong>feather definition lines.</strong> I added 6 wing feather strokes instead of 4, creating a more complex bird. Each line needed:</p>
-    <ul>
-      <li>Different opacity levels (0.4-0.5) to avoid overwhelming the design</li>
-      <li>Careful curvature matching the wing's shape</li>
-      <li>Filters to soften edges and blend into the gradient background</li>
-    </ul>
-    <p>More feather lines made the bird look more real, but also more complex to manage.</p>
-
-    <h2>14. The Tail Feature</h2>
-    <p>The blue jay's tail is <strong>long and fan-shaped</strong>, quite different from the robin's short tail. Rendering it required:</p>
-    <ul>
-      <li>Using curved strokes instead of ellipses (to show the feathered nature)</li>
-      <li>Positioning it <strong>behind</strong> the body (z-order matters)</li>
-      <li>Making it visually distinct from the wings through color and opacity</li>
-    </ul>
-    <p>This was my first experience with multi-part features that extend beyond the body boundary.</p>
-
-    <h2>15. Key Lesson: Different Birds Require Different Approaches</h2>
-    <p>The robin's approach (soft gradients, simple shapes, subtle details) worked well. The blue jay demanded a <strong>different visual language:</strong></p>
-    <ul>
-      <li>More defined shapes (the crest, the distinct tail)</li>
-      <li>Higher contrast between colors</li>
-      <li>More visible detail lines (feathers)</li>
-      <li>Taller proportions (larger head:body ratio)</li>
-    </ul>
-    <p>If I were to draw a third bird, I'd need to study its <strong>unique features first</strong> and design the SVG architecture around them, rather than trying to reuse the robin's template.</p>
-
-    <h2>16. What Worked Well This Time</h2>
-    <ul>
-      <li><strong>Gradients with more stops</strong> &mdash; the radial gradients on the head and wings looked more natural</li>
-      <li><strong>Filter application</strong> &mdash; Gaussian blur on feather lines made them feel integrated</li>
-      <li><strong>Eye detail</strong> &mdash; adding an eye ring around the pupil felt more lifelike</li>
-      <li><strong>Leg/foot anatomy</strong> &mdash; visible toes and proper proportions made the bird feel grounded</li>
+      <li><strong>feTurbulence is the right tool for organic patterns</strong> — feathers, pan-fry marks, bark, cloth. Hand-placed ellipses always look artificial.
+        <br>Recipe: <code>&lt;feTurbulence baseFrequency="0.038 0.028" numOctaves="3" seed="11"/&gt;</code> →
+        <code>&lt;feColorMatrix values="0 0 0 0 0 / 0 0 0 0 0 / 0 0 0 0 0 / 8 0 0 0 -3.2"/&gt;</code> →
+        <code>&lt;feComposite operator="in"/&gt;</code>. Lower baseFrequency = bigger blobs; higher alpha multiplier = sharper edges.</li>
+      <li><strong>Layer multiple turbulence passes</strong> with different seeds and frequencies to vary pattern density (dense fine spots in the throat, larger blobs mid-breast).</li>
+      <li><strong><code>operator="in"</code> composite reveals the source fill colour</strong> where the alpha mask fires — so the source rect/ellipse fill must already be the desired output colour.</li>
+      <li><strong>Filters can bleed outside clipPaths</strong> if the filter region (x/y/width/height) is too large.</li>
     </ul>
 
-    <h2>17. Tools for Next Iteration</h2>
-    <p>To improve further, I'd want:</p>
+    <!-- ================================================== -->
+    <h2>Gradients &amp; Colour</h2>
     <ul>
-      <li><code>feTurbulence</code> filter for organic feather texture</li>
-      <li>More precise <code>&lt;path&gt;</code> elements tracing real feather shapes</li>
-      <li><code>clipPath</code> to create sharp boundaries between color regions</li>
-      <li>Animation effects (subtle feather movement) using SVG animation</li>
-      <li>A proper reference photo overlaid at 50% opacity to trace from</li>
+      <li><strong>Radial gradient = sphere.</strong> Never use a centre-bright radial gradient on a flat surface — it reads as a bubble. Use a linear gradient instead.</li>
+      <li><strong>Flat design uses minimal gradients.</strong> One or two subtle linear shades; feTurbulence and complex radials fight the flat aesthetic. Getting colour-area boundaries right matters far more.</li>
+      <li><strong>Stack complementary layers:</strong> linear base + radial patch (pan-fry spots) + turbulence overlay — each adds one cue without fighting the others.</li>
     </ul>
 
-    <h2>18. Iteration 4: Drawing a Hummingbird (feTurbulence Breakthrough)</h2>
-    <p>The fourth bird was an <strong>emerald-speckled hummingbird</strong> perched on a branch — a completely different challenge from the robin and blue jay. Key new discoveries:</p>
-
-    <h2>19. feTurbulence is the Right Tool for Organic Spots</h2>
-    <p>The biggest lesson: hand-placing dozens of ellipses to simulate mottled feather patterns produces <strong>regular, artificial-looking blobs</strong>. The real solution is <code>feTurbulence</code> + <code>feColorMatrix</code>:</p>
+    <!-- ================================================== -->
+    <h2>Z-Order &amp; Masking</h2>
     <ul>
-      <li>Generate noise: <code>&lt;feTurbulence type="turbulence" baseFrequency="0.038 0.028" numOctaves="3" seed="11"/&gt;</code></li>
-      <li>Threshold into blobs: <code>feColorMatrix</code> with <code>values="0 0 0 0 0 / 0 0 0 0 0 / 0 0 0 0 0 / 8 0 0 0 -3.2"</code> — this sets alpha = 8×R(noise) − 3.2</li>
-      <li>Composite back: <code>&lt;feComposite in="SourceGraphic" in2="blobAlpha" operator="in"/&gt;</code> reveals the source colour only where the threshold fires</li>
-      <li>Apply to a <strong>solid teal ellipse</strong> clipped to the breast region — result: perfectly organic, irregular iridescent patches</li>
-    </ul>
-    <p><strong>Tuning knobs:</strong> <code>baseFrequency</code> controls blob size (lower = bigger), <code>seed</code> changes the pattern, and the multiplier/offset in the alpha row controls density vs sparsity of spots.</p>
-
-    <h2>20. The Head-Body Disconnection Problem</h2>
-    <p>Hummingbirds have large heads relative to their compact bodies, but in SVG, drawing these as separate geometric shapes (a circle and an ellipse) always creates a visible "ball sitting on an egg" look. Root causes:</p>
-    <ul>
-      <li>Sharp edges on both shapes — real birds have feathers that blur the boundary</li>
-      <li>SVG has no equivalent to ink wash or soft brush blending along an edge</li>
-      <li>A dark <code>feGaussianBlur</code> ellipse at the neck junction helps but doesn't fully solve it</li>
-    </ul>
-    <p><strong>Better approach</strong>: define the bird's entire silhouette as a single <code>&lt;path&gt;</code>, then overlay the white breast area and dark head cap as separate layers. This avoids any geometric boundary between "head" and "body".</p>
-
-    <h2>21. Hummingbird's Unique Proportions</h2>
-    <p>Unlike robins and blue jays, hummingbirds have distinct proportions that must be respected from the start:</p>
-    <ul>
-      <li><strong>Beak length</strong>: roughly 50% of body height — this is the defining feature; too short and it's not a hummingbird</li>
-      <li><strong>Head:body ratio</strong>: larger than most birds (~35:65 height), but the head is NOT bigger than the body</li>
-      <li><strong>Body shape</strong>: nearly perfectly oval/football-shaped when perched, very compact</li>
-      <li><strong>Tail</strong>: very short, barely visible below the branch — unlike the blue jay's fan tail</li>
-      <li><strong>Wings</strong>: entirely tucked when perched, just a dark oval visible on the back</li>
+      <li><strong>SVG's painter model is a free masking tool.</strong> Draw yellow belly <em>before</em> the dark wing; the wing covers most of it and leaves a visible crescent — no <code>clipPath</code> needed when overlapping shapes share a colour.</li>
+      <li><strong>Never double-draw a shape for masking.</strong> Drawing the wing twice to "mask off" the yellow belly doubled coverage and hid the orange breast entirely. Draw each shape exactly once; rely on z-order.</li>
+      <li><strong>Wing coverage balance (side-view bird):</strong> dark wing ≈45–55% of body area (back/upper), orange breast ≈50–55% (front/lower). Right boundary at mid-height sits close to body centre x. If the drawing looks "too dark", the wing path is too wide.</li>
     </ul>
 
-    <h2>22. Multiple feTurbulence Layers for Varied Pattern Density</h2>
-    <p>A single turbulence pass produces blobs of uniform character. Layering two or three passes with different seeds and frequencies creates:</p>
+    <!-- ================================================== -->
+    <h2>Species-Specific Techniques</h2>
     <ul>
-      <li>Dense fine spotting in the throat area (higher <code>baseFrequency</code>)</li>
-      <li>Larger blobs in the mid-breast (lower <code>baseFrequency</code>)</li>
-      <li>Varying brightness across spots (second layer with lower opacity)</li>
-    </ul>
-    <p>This multi-layer approach much better approximates the <strong>graduated density</strong> of real feather patterning.</p>
-
-    <h2>23. Filter Side-Effects to Watch For</h2>
-    <p>The <code>bodySheen</code> filter (intended to add iridescent sheen to the dark back) unexpectedly created a bright white blob because the filter's output colour was the <em>source fill</em> rather than the expected dark teal. Lessons:</p>
-    <ul>
-      <li>Always test filter opacity at 100% first, then reduce — unexpected colours become immediately visible</li>
-      <li>The <code>operator="in"</code> composite reveals the <em>source colour</em> where alpha mask is opaque — so the source fill must already be the desired output colour</li>
-      <li>Filters with wide <code>x/y/width/height</code> regions can bleed outside clip paths, creating unexpected artefacts</li>
+      <li><strong>Blue jay crest:</strong> three separate overlapping paths with slight colour variations (#1a3a5c → #2563b8) beat a single ellipse; higher contrast and more defined feather lines than a robin.</li>
+      <li><strong>Hummingbird:</strong> beak length ≈50% of body height is the defining feature; body is nearly perfectly oval when perched; tail barely visible; wings entirely tucked (just a dark oval on the back).</li>
+      <li><strong>Flat geometric robin:</strong> orange is the dominant colour; dark navy wing covers upper-left; blue-gray is a distinct curved band at the top of the wing; golden yellow peeks below the wing bottom edge.</li>
     </ul>
 
-    <h2>24. What Would Improve the Hummingbird Further</h2>
+    <!-- ================================================== -->
+    <h2>Food &amp; Object Techniques</h2>
     <ul>
-      <li><strong>Single-path silhouette</strong> — eliminate the head-body gap by tracing the entire bird outline as one <code>&lt;path&gt;</code></li>
-      <li><strong>feTurbulence with feDisplacementMap</strong> — could warp the breast ellipse edge to simulate irregular feather fringing</li>
-      <li><strong>Iridescent colour shift</strong> — SVG <code>feColorMatrix</code> with hue-rotate could simulate the angle-dependent colour change of iridescent feathers</li>
-      <li><strong>Animation</strong> — <code>animateTransform</code> for a subtle breathing/settling motion of the perched bird</li>
+      <li><strong>For food, colour palette matters more than shape accuracy.</strong> There's no skeleton to anchor proportions — any blob of the right colour reads as the dish. Get the hues right first.</li>
+      <li><strong>Perspective plate with <code>&lt;polygon&gt;</code>:</strong> trapezoid (top edge narrower than bottom) creates a convincing angled view. Add a separate front-edge polygon for ceramic thickness.</li>
+      <li><strong>feTurbulence for pan-fry texture:</strong> seed="3", asymmetric baseFrequency (0.042 horizontal, 0.024 vertical) makes horizontal streaks that evoke cooked egg wrinkles. Apply to a clipped <code>&lt;rect&gt;</code> over the omelette.</li>
+      <li><strong>Vignette:</strong> topmost <code>&lt;rect&gt;</code> with a <code>radialGradient</code> transparent→black(0.55) — focuses the eye, mimics camera lens darkening, costs one element.</li>
+      <li><strong>Warm glow halo:</strong> large blurred amber ellipse (opacity 0.07–0.10) under the subject — simulates heat-cast light. Keep opacity very low or it overwhelms.</li>
+      <li><strong>Wood grain:</strong> two sets of near-invisible diagonal lines (opacity 0.05–0.06) at slightly different angles — believable texture at near-zero render cost.</li>
     </ul>
 
-    <h2>25. Extending SVG Beyond Birds: Food as Subject</h2>
-    <p>The omelette was the first non-bird subject — and it revealed that the core SVG toolkit transfers well to food illustration. Key differences from birds:</p>
+    <!-- ================================================== -->
+    <h2>Workflow</h2>
     <ul>
-      <li><strong>Food has no skeletal structure</strong> — the shape is entirely defined by its cooking/pouring process, producing irregular organic blobs rather than symmetric body plans</li>
-      <li><strong>Colour is the main cue</strong> — golden-orange for egg, blue-purple for plate, dark mahogany for wood; accurate colour palette matters more than anatomical accuracy</li>
-      <li><strong>Multiple props</strong> — a plated dish has garnishes, condiments, the plate itself, and the table, all requiring separate layers with correct z-ordering</li>
-      <li><strong>Texture cues matter enormously</strong> — a perfectly smooth gradient reads as plastic, not food; the <code>feTurbulence</code> overlay was essential to making the egg look cooked</li>
+      <li><strong>Five render-feedback iterations, not one.</strong> View in browser → zoom into problem areas → identify <em>specific</em> failures → fix exactly those → repeat. Never speculate about what will look good; see it first.</li>
+      <li><strong>Tracing beats freehand for accuracy.</strong> Match the SVG viewBox to the photo's pixel dimensions and use the reference as a semi-transparent overlay.</li>
+      <li><strong>Dominant colour test:</strong> step back and ask which colour should be the largest area. If it doesn't match what you see, fix the boundary paths before touching anything else.</li>
     </ul>
 
-    <h2>26. Perspective with &lt;polygon&gt; for a Plate</h2>
-    <p>Representing a square plate viewed at a slight angle required a trapezoid (top edge narrower than bottom edge). Using a <code>&lt;polygon&gt;</code> with four carefully chosen points:</p>
-    <ul>
-      <li><code>points="155,178 545,178 590,460 110,460"</code> — top edge is 390px wide, bottom is 480px wide, creating a consistent vanishing-point illusion</li>
-      <li>A separate front edge polygon gives ceramic <strong>thickness</strong>: <code>"110,460 590,460 602,492 98,492"</code> — same width but shifted down and outward</li>
-      <li>Linear gradients applied to the polygon surface work correctly because SVG gradients respect the bounding box, not the polygon shape — this required adjusting gradient stop positions to match the visual surface</li>
-      <li>Adding an inner rim line (<code>&lt;polygon&gt;</code> with <code>fill="none"</code> and a faint stroke) sells the illusion of a raised ceramic edge</li>
-    </ul>
-
-    <h2>27. Flat vs Spherical Gradients for Food</h2>
-    <p>The single biggest visual error in Iteration 1 was using a <strong>radial gradient</strong> (bright centre, dark edges) on the omelette ellipse. This made it look like a shiny sphere, not a flat egg.</p>
-    <ul>
-      <li><strong>Radial gradient</strong>: centre-bright → reads as 3D sphere or bubble. Never use for flat food surfaces.</li>
-      <li><strong>Linear gradient top-to-bottom</strong>: mimics overhead lighting on a flat surface. The omelette used <code>linearGradient</code> from <code>#f8d855</code> (top) to <code>#9a5200</code> (bottom) — correctly simulating an overhead light source casting shadow toward the viewer.</li>
-      <li>Stack multiple gradients: a linear base + a radial brown patch (for pan-fried spots) + the turbulence overlay. Each layer adds one cue without fighting the others.</li>
-    </ul>
-
-    <h2>28. feTurbulence for Pan-Fried Texture</h2>
-    <p>The same <code>feTurbulence</code> technique that produced iridescent hummingbird spots works equally well for pan-fried egg texture. The configuration differs:</p>
-    <ul>
-      <li><strong>Lower seed number</strong> (seed="3") produces more blocky, contiguous patches — right for pan-fry marks rather than fine feather spots</li>
-      <li><strong>Lower baseFrequency</strong> (0.042 horizontal, 0.024 vertical — asymmetric) creates larger horizontal streaks that evoke cooked egg wrinkles</li>
-      <li><strong>Dark brown flood colour</strong> (<code>#8a4800</code>) for the fold overlay — darker than the base orange, suggesting browning from heat</li>
-      <li>Applied to a <code>&lt;rect&gt;</code> (not an ellipse) and clipped with <code>clipPath</code> to the omelette outline — the rect's fill colour determines the spot colour</li>
-      <li><strong>Key lesson</strong>: <code>feTurbulence</code> is a general organic texture generator. Its use cases extend well beyond bird plumage to any natural surface (pan marks, stone, bark, cloth).</li>
-    </ul>
-
-    <h2>29. The Render-Feedback Loop in Practice</h2>
-    <p>For the omelette, each of 5 iterations was rendered in Chrome, zoomed into key areas, and specific problems identified before writing the next iteration. This produced better results faster than speculating what would look good:</p>
-    <ul>
-      <li><strong>Iteration 1</strong>: Established gross composition; revealed the sphere-like gradient problem immediately</li>
-      <li><strong>Iteration 2</strong>: Fixed gradient and added turbulence texture; revealed stalks too thin and garnishes absent</li>
-      <li><strong>Iteration 3</strong>: Added garnishes and scattered bits; revealed garnishes running off the plate edge</li>
-      <li><strong>Iteration 4</strong>: Repositioned garnishes; revealed an errant table highlight ellipse creating an odd bright spot</li>
-      <li><strong>Iteration 5</strong>: Removed the artifact, added vignette and warm glow — composition felt finished</li>
-    </ul>
-    <p>Each iteration fixed <em>exactly the bugs visible in the screenshot</em>, rather than guessing. This is strictly better than single-pass SVG generation.</p>
-
-    <h2>30. Atmospheric Depth with Vignette + Warm Glow</h2>
-    <p>Two simple effects that dramatically improve the "photographic" feel of a scene:</p>
-    <ul>
-      <li><strong>Vignette</strong>: A <code>radialGradient</code> from transparent at centre to <code>rgba(0,0,0,0.55)</code> at the corners, applied as the topmost <code>&lt;rect&gt;</code> covering the entire SVG. This focuses the viewer's eye and mimics camera lens darkening. Cost: one element, zero filter overhead.</li>
-      <li><strong>Warm glow</strong>: A large semi-transparent amber ellipse drawn over the plate area with a heavy <code>feGaussianBlur</code> (stdDeviation="18") — simulates the warm light cast by a hot dish onto the surrounding surface. Keep opacity very low (0.07–0.10) or it overwhelms the scene.</li>
-      <li><strong>Wood grain</strong>: Two sets of nearly-invisible diagonal lines (opacity 0.05–0.06) at different angles create a believable wood texture at essentially zero render cost.</li>
-    </ul>
-
-    <h2>31. What Would Improve the Omelette Further</h2>
-    <ul>
-      <li><strong>Egg fold/roll</strong> — the reference omelette is folded; a visible crease down the centre with a slight elevation change (using a subtle lightening of one half) would add realism</li>
-      <li><strong>Plate shadow variation</strong> — currently the plate has uniform blue; a very subtle warm tinge near the omelette and cool blue at the far corners would improve the lighting story</li>
-      <li><strong>Oil sheen</strong> — a narrow, very bright linear highlight stroke across the omelette top would suggest that fresh-from-pan oiliness</li>
-      <li><strong>feDisplacementMap on omelette edge</strong> — to give the crispy edge more irregular, bubbly character rather than a clean stroke</li>
-      <li><strong>Depth of field blur</strong> — blurring the garnishes slightly (they're at the back of the plate) would give a bokeh-like photographic quality</li>
-    </ul>
   </div>
 </body>
 </html>
