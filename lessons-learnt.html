@@ -133,6 +133,20 @@
     </ul>
 
     <!-- ================================================== -->
+    <h2>Bezier Primitives <span class="session-tag">bezier-bird</span></h2>
+    <ul>
+      <li><strong>Cubic bezier approximation of circles with k = 0.5523.</strong> Any <code>&lt;ellipse&gt;</code> (cx, cy, rx, ry) becomes four cubic bezier segments:
+        <br><code>M cx,cy-ry  C cx+k·rx,cy-ry  cx+rx,cy-k·ry  cx+rx,cy</code>
+        <br><code>C cx+rx,cy+k·ry  cx+k·rx,cy+ry  cx,cy+ry</code>
+        <br><code>C cx-k·rx,cy+ry  cx-rx,cy+k·ry  cx-rx,cy</code>
+        <br><code>C cx-rx,cy-k·ry  cx-k·rx,cy-ry  cx,cy-ry  Z</code></li>
+      <li><strong>Seam fix scales with head size.</strong> When the head shrinks (r 70 → 50), the old wing-start point that was safely inside may now be outside. Always recheck: <code>dist(wing_start, head_center) &lt; head_radius</code> after every head resize.</li>
+      <li><strong>Parameter cascade: changing one shape forces updates to many others.</strong> Reducing body ry changes the body-bottom y, which shifts leg-start y, foot y, and shadow y. Work top-to-bottom in a single pass rather than fixing shapes one by one.</li>
+      <li><strong>Body aspect ratio for standing flat-design bird: ~1.8–2.0 width:height.</strong> An equal-rx-ry body looks like a ball; ry ≈ rx/2 reads as a natural perched posture. Legs need to be ~15–20% of canvas height to look credible.</li>
+      <li><strong>Head-to-body width ratio ≈ 30–35%</strong> for a flat geometric bird. The default r=70 on a 500px canvas (diameter 140, body width 296) is 47% — far too big. r=50 (diameter 100, ~34%) matches the reference.</li>
+    </ul>
+
+    <!-- ================================================== -->
     <h2>Workflow</h2>
     <ul>
       <li><strong>Five render-feedback iterations, not one.</strong> View in browser → zoom into problem areas → identify <em>specific</em> failures → fix exactly those → repeat. Never speculate about what will look good; see it first.</li>

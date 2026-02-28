@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Bezier Bird</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb - Bezier Bird</h1>
+
+  <div class="controls">
+    <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label">My SVG Drawing (Bezier Paths Only)</div>
+
+      <!--
+        All shapes are <path> elements using cubic bezier (C) commands.
+        No <ellipse>, <circle>, or <rect> primitives used.
+
+        Circle/ellipse → cubic bezier approximation with k = 0.5523:
+          For ellipse (cx, cy, rx, ry):
+          M cx,cy-ry
+          C cx+k·rx,cy-ry   cx+rx,cy-k·ry   cx+rx,cy
+          C cx+rx,cy+k·ry   cx+k·rx,cy+ry   cx,cy+ry
+          C cx-k·rx,cy+ry   cx-rx,cy+k·ry   cx-rx,cy
+          C cx-rx,cy-k·ry   cx-k·rx,cy-ry   cx,cy-ry  Z
+      -->
+      <svg id="myDrawing" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bodyShade" x1="80%" y1="20%" x2="20%" y2="90%">
+            <stop offset="0%" stop-color="#F09060"/>
+            <stop offset="100%" stop-color="#D86838"/>
+          </linearGradient>
+          <linearGradient id="bellyShade" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#F5A028"/>
+            <stop offset="100%" stop-color="#F4B830"/>
+          </linearGradient>
+        </defs>
+
+        <!-- SHADOW — ellipse (cx=245, cy=443, rx=78, ry=7), k·rx=43.08, k·ry=3.87 -->
+        <path d="M 245,436
+                 C 288.08,436  323,439.13  323,443
+                 C 323,446.87  288.08,450  245,450
+                 C 201.92,450  167,446.87  167,443
+                 C 167,439.13  201.92,436  245,436 Z"
+              fill="#c0c5cc" opacity="0.5"/>
+
+        <!-- TAIL — larger cubic bezier wedge, lower-left -->
+        <path d="M 132,298
+                 C 105,308  68,332  44,360
+                 C 51,376   78,376  94,365
+                 C 114,350  136,322  150,312 Z"
+              fill="#E06040"/>
+
+        <!-- BODY — ellipse (cx=235, cy=272, rx=148, ry=82), k·rx=81.74, k·ry=45.29 -->
+        <path d="M 235,190
+                 C 316.74,190  383,226.71  383,272
+                 C 383,317.29  316.74,354  235,354
+                 C 153.26,354  87,317.29  87,272
+                 C 87,226.71  153.26,190  235,190 Z"
+              fill="url(#bodyShade)"/>
+
+        <!-- YELLOW BELLY — ellipse (cx=228, cy=332, rx=110, ry=48), k·rx=60.75, k·ry=26.51 -->
+        <path d="M 228,284
+                 C 288.75,284  338,308.49  338,332
+                 C 338,355.51  288.75,380  228,380
+                 C 167.25,380  118,355.51  118,332
+                 C 118,308.49  167.25,284  228,284 Z"
+              fill="url(#bellyShade)"/>
+
+        <!-- DARK WING — start (318,183) inside head (358,158,r=50): dist≈47 < 50 ✓ -->
+        <path d="M 318,183
+                 C 293,163  256,147  218,139
+                 C 180,131  148,137  128,163
+                 C 113,183  114,215  116,243
+                 L 118,305
+                 C 132,333  156,343  186,345
+                 C 208,347  226,337  230,319
+                 C 234,297  238,273  236,245
+                 C 234,223  256,201  318,183 Z"
+              fill="#1D2B3A"/>
+
+        <!-- BLUE-GRAY STRIP — upper crescent of wing -->
+        <path d="M 318,183
+                 C 293,163  256,147  218,139
+                 C 180,131  148,137  128,163
+                 C 116,179  116,203  118,221
+                 C 140,205  170,191  204,183
+                 C 232,175  270,175  300,180
+                 C 310,182  316,182  318,183 Z"
+              fill="#90B4BC"/>
+
+        <!-- HEAD — circle (cx=358, cy=158, r=50), k·r=27.62
+             Wing start (318,183): dist=sqrt(40²+25²)≈47 < 50, safely inside ✓ -->
+        <path d="M 358,108
+                 C 385.62,108  408,130.38  408,158
+                 C 408,185.62  385.62,208  358,208
+                 C 330.38,208  308,185.62  308,158
+                 C 308,130.38  330.38,108  358,108 Z"
+              fill="#1D2B3A"/>
+
+        <!-- EYE WHITE — circle (cx=372, cy=146, r=11), k·r=6.08 -->
+        <path d="M 372,135
+                 C 378.08,135  383,139.92  383,146
+                 C 383,152.08  378.08,157  372,157
+                 C 365.92,157  361,152.08  361,146
+                 C 361,139.92  365.92,135  372,135 Z"
+              fill="white"/>
+
+        <!-- EYE PUPIL — circle (cx=374, cy=147, r=4), k·r=2.21 -->
+        <path d="M 374,143
+                 C 376.21,143  378,144.79  378,147
+                 C 378,149.21  376.21,151  374,151
+                 C 371.79,151  370,149.21  370,147
+                 C 370,144.79  371.79,143  374,143 Z"
+              fill="#1D2B3A"/>
+
+        <!-- BEAK — sharp filled triangle, head right edge x=408 at cy=158 -->
+        <path d="M 406,151 L 468,158 L 406,166 Z"
+              fill="#1D2B3A"/>
+
+        <!-- BACK LEG — 88px tall (body bottom y=354, feet y=442) -->
+        <path d="M 228,352 L 239,352 L 239,440 L 228,440 Z"
+              fill="#1D2B3A"/>
+        <!-- BACK FOOT — flat pad on shadow line -->
+        <path d="M 200,438 L 248,438 L 248,446 L 200,446 Z"
+              fill="#1D2B3A"/>
+
+        <!-- FRONT LEG — 88px tall -->
+        <path d="M 260,350 L 271,350 L 271,440 L 260,440 Z"
+              fill="#1D2B3A"/>
+        <!-- FRONT FOOT -->
+        <path d="M 232,438 L 280,438 L 280,446 L 232,446 Z"
+              fill="#1D2B3A"/>
+      </svg>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference</div>
+      <img id="referenceImg" src="images/baseline.jpg" alt="Flat geometric bird reference">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    <p>Reference: <a href="https://www.vecteezy.com/vector-art/25792305-cute-simple-bird-flat-vector" target="_blank" rel="noopener">"Cute Simple Bird Flat Vector"</a> on Vecteezy (Free License)</p>
+    <p><a href="images/ATTRIBUTION.md">View full image credits</a> &bull; <a href="baseline.html">Ellipse version</a> &bull; <a href="lessons-learnt.html">Lessons Learnt</a></p>
+  </div>
+
+  <script>
+    let flipped = false;
+    function flipBoth() {
+      flipped = !flipped;
+      const transform = flipped ? 'scaleX(-1)' : 'scaleX(1)';
+      document.getElementById('myDrawing').style.transform = transform;
+      document.getElementById('referenceImg').style.transform = transform;
+    }
+  </script>
+</body>
+</html>
