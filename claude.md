@@ -8,6 +8,15 @@
 6. Iterate
 7. Write learnings to lessons-learnt.html
 
+## Manual prompt
+
+1. Read previous learning from lessons-learnt.html
+2. start a server
+3. Draw a bird in HTML + SVG of images/baseline.jpg
+4. View your own creation as image
+5. Iterate on it until it looks accurate
+7. Write learnings to lessons-learnt.html
+
 ## Credits
 
 - Reference photo: ["Cute Robin"](https://www.stockvault.net/photo/208041/cute-robin) by Pixabay on [Stockvault.net](https://www.stockvault.net/) — Free Stock Photo
