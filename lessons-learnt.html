@@ -160,6 +160,19 @@
     </ul>
 
     <!-- ================================================== -->
+    <h2>Bezier Stroke Outlines <span class="session-tag">bezier-outline-bird</span></h2>
+    <ul>
+      <li><strong><code>fill="none"</code> on every path is a complete drawing technique.</strong> Coloured strokes alone — no fills at all — produce readable, expressive line art. The viewer's eye infers the colour regions from the boundary lines.</li>
+      <li><strong>Colour-code strokes by region, not by outline role.</strong> Use the region's own colour as the stroke colour (orange for the body silhouette, dark navy for the head, orange-red for the tail) rather than a neutral black. This reads immediately as a colour sketch rather than a technical diagram.</li>
+      <li><strong>Open paths carry boundary information just as well as closed ones.</strong> The wing boundary, blue-gray strip edges, and belly arc are all open <code>&lt;path&gt;</code> elements — they communicate the colour region without enclosing any area to fill.</li>
+      <li><strong>Catmull-Rom to cubic bezier gives smooth curves through scanned points.</strong> For consecutive points P<sub>i-1</sub>, P<sub>i</sub>, P<sub>i+1</sub>, P<sub>i+2</sub>: <code>CP1 = Pᵢ + (Pᵢ₊₁ − Pᵢ₋₁)/6</code>, <code>CP2 = Pᵢ₊₁ − (Pᵢ₊₂ − Pᵢ)/6</code>. At endpoints, mirror the missing neighbour (set P<sub>-1</sub> = P<sub>0</sub> or P<sub>n+1</sub> = P<sub>n</sub>).</li>
+      <li><strong>A fill toggle bridges outline and filled modes.</strong> Add <code>data-fill="colour"</code> to closed paths; JS reads the attribute to apply or remove the fill. Users can compare the two modes side-by-side in one page. Open paths (legs, belly arc, strip edges) are excluded automatically since they have no <code>data-fill</code>.</li>
+      <li><strong>Close a beak path with Z to make it fillable.</strong> A V-shaped beak drawn as two open curves fills to nothing — Z closes the triangle from the tip back to the start, making <code>data-fill</code> work correctly.</li>
+      <li><strong>The dynamic label reinforces the toggle state.</strong> Updating <code>textContent</code> on the label element ("Outlines Only" ↔ "Outlines + Fills") prevents confusion when the visual change is subtle at small sizes.</li>
+      <li><strong>Dark page background makes coloured strokes pop.</strong> The semi-transparent SVG background (<code>rgba(255,255,255,0.05)</code>) on the dark green page provides just enough contrast to read thin strokes without washing them out.</li>
+    </ul>
+
+    <!-- ================================================== -->
     <h2>Workflow</h2>
     <ul>
       <li><strong>Five render-feedback iterations, not one.</strong> View in browser → zoom into problem areas → identify <em>specific</em> failures → fix exactly those → repeat. Never speculate about what will look good; see it first.</li>
