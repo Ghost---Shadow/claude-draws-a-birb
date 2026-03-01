@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Boundary Scanner — baseline.jpg</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #1a2a1a;
+      font-family: monospace;
+      color: #c8d8b0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+      gap: 1rem;
+    }
+    h1 { font-size: 1.1rem; color: #90b870; letter-spacing: 0.05em; }
+
+    /* ── controls ── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.5rem;
+      align-items: center;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      width: 100%;
+      max-width: 960px;
+    }
+    .ctrl { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+    .ctrl label { color: #90a870; white-space: nowrap; }
+    input[type=range] { width: 80px; accent-color: #90b870; }
+    input[type=number] { width: 52px; background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15); color: #c8d8b0;
+      padding: 0.2rem 0.3rem; border-radius: 4px; font-family: monospace; }
+    button {
+      background: rgba(144,184,112,0.2);
+      border: 1px solid rgba(144,184,112,0.4);
+      color: #c8d8b0; padding: 0.4rem 1rem; border-radius: 6px;
+      cursor: pointer; font-family: monospace; font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+    button:hover { background: rgba(144,184,112,0.35); }
+    button.active { background: rgba(144,184,112,0.45); border-color: #90b870; }
+
+    /* ── region toggles ── */
+    .regions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 960px;
+    }
+    .region-btn {
+      display: flex; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      cursor: pointer; font-size: 0.78rem; font-family: monospace;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .region-btn.on { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.1); }
+    .swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── canvas ── */
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+    }
+    canvas { display: block; width: 100%; border-radius: 6px; }
+    #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    /* ── output ── */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 960px;
+    }
+    .out-block {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .out-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.35rem 0.6rem;
+      background: rgba(255,255,255,0.05);
+      font-size: 0.72rem;
+      gap: 0.4rem;
+    }
+    .out-header span { display: flex; align-items: center; gap: 0.35rem; }
+    .out-header button { padding: 0.15rem 0.5rem; font-size: 0.7rem; }
+    textarea {
+      width: 100%; resize: vertical;
+      background: transparent; border: none;
+      color: #a8c890; font-family: monospace; font-size: 0.72rem;
+      padding: 0.5rem 0.6rem; line-height: 1.5; min-height: 60px;
+      outline: none;
+    }
+    .status { font-size: 0.75rem; color: #708850; }
+  </style>
+</head>
+<body>
+  <h1>▸ Boundary Scanner — baseline.jpg</h1>
+
+  <div class="controls">
+    <button id="btnScan" onclick="runScan()">⬡ Scan</button>
+
+    <div class="ctrl">
+      <label>Step (px)</label>
+      <input type="range" id="slStep" min="1" max="16" value="4"
+             oninput="document.getElementById('lblStep').textContent=this.value">
+      <span id="lblStep">4</span>
+    </div>
+
+    <div class="ctrl">
+      <label>ε RDP (px)</label>
+      <input type="range" id="slEps" min="1" max="40" value="12"
+             oninput="document.getElementById('lblEps').textContent=this.value">
+      <span id="lblEps">12</span>
+    </div>
+
+    <div class="ctrl">
+      <label>Output canvas px</label>
+      <input type="number" id="inCanvasPx" value="500" min="100" max="4000" step="100">
+    </div>
+
+    <div class="ctrl">
+      <label>Show raw</label>
+      <input type="checkbox" id="chkRaw">
+    </div>
+
+    <span class="status" id="status">ready</span>
+  </div>
+
+  <!-- Region toggle buttons -->
+  <div class="regions" id="regionBtns"></div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrap">
+    <canvas id="base"></canvas>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <!-- Output blocks -->
+  <div class="output-grid" id="outputGrid"></div>
+
+  <script>
+  // ═══════════════════════════════════════════════════════════
+  // Region definitions
+  // ═══════════════════════════════════════════════════════════
+  const REGIONS = [
+    { id: 'orange',  label: 'Orange body',      hex: '#e8834e', tol: 40,  draw: '#e8834e' },
+    { id: 'navy',    label: 'Dark navy',         hex: '#253146', tol: 30,  draw: '#6aaef0' },
+    { id: 'strip',   label: 'Blue-gray strip',   hex: '#8fb0be', tol: 32,  draw: '#8fb0be' },
+    { id: 'belly',   label: 'Golden belly',      hex: '#f5b942', tol: 40,  draw: '#f5d040' },
+    { id: 'tail',    label: 'Orange-red tail',   hex: '#d96040', tol: 32,  draw: '#ff7050' },
+  ];
+
+  // Boundary types produced per region
+  const BTYPES = [
+    { id: 'hleft',  label: 'H left',   desc: 'leftmost x per row' },
+    { id: 'hright', label: 'H right',  desc: 'rightmost x per row' },
+    { id: 'vtop',   label: 'V top',    desc: 'topmost y per col' },
+    { id: 'vbot',   label: 'V bottom', desc: 'bottommost y per col' },
+  ];
+
+  // ═══════════════════════════════════════════════════════════
+  // State
+  // ═══════════════════════════════════════════════════════════
+  let imgData = null;   // ImageData at native resolution
+  let nativeW = 0, nativeH = 0;
+  let dispScale = 1;    // native → display canvas
+  let activeRegions = new Set(REGIONS.map(r => r.id));
+  let lastResults = {};
+
+  // ═══════════════════════════════════════════════════════════
+  // Build UI
+  // ═══════════════════════════════════════════════════════════
+  const btnContainer = document.getElementById('regionBtns');
+  REGIONS.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'region-btn on';
+    el.dataset.id = r.id;
+    el.innerHTML = `<span class="swatch" style="background:${r.hex}"></span>${r.label}`;
+    el.onclick = () => {
+      if (activeRegions.has(r.id)) activeRegions.delete(r.id);
+      else activeRegions.add(r.id);
+      el.classList.toggle('on', activeRegions.has(r.id));
+    };
+    btnContainer.appendChild(el);
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // Load image
+  // ═══════════════════════════════════════════════════════════
+  const img = new Image();
+  img.onload = () => {
+    nativeW = img.naturalWidth;
+    nativeH = img.naturalHeight;
+
+    // Offscreen canvas at native resolution for pixel data
+    const off = document.createElement('canvas');
+    off.width = nativeW; off.height = nativeH;
+    const octx = off.getContext('2d');
+    octx.drawImage(img, 0, 0);
+    imgData = octx.getImageData(0, 0, nativeW, nativeH);
+
+    // Display canvas
+    const base = document.getElementById('base');
+    base.width = nativeW; base.height = nativeH;
+    base.getContext('2d').drawImage(img, 0, 0);
+
+    const ov = document.getElementById('overlay');
+    ov.width = nativeW; ov.height = nativeH;
+
+    // dispScale = CSS width / native width, computed at draw time
+    document.getElementById('status').textContent =
+      `loaded ${nativeW}×${nativeH}`;
+  };
+  img.src = 'images/baseline.jpg';
+
+  // ═══════════════════════════════════════════════════════════
+  // Colour helpers
+  // ═══════════════════════════════════════════════════════════
+  function hexToRgb(hex) {
+    return [
+      parseInt(hex.slice(1,3), 16),
+      parseInt(hex.slice(3,5), 16),
+      parseInt(hex.slice(5,7), 16),
+    ];
+  }
+
+  function makeMatcher(hex, tol) {
+    const [tr, tg, tb] = hexToRgb(hex);
+    const tol2 = tol * tol * 3;  // squared euclidean in RGB space
+    return (r, g, b) => {
+      const dr = r-tr, dg = g-tg, db = b-tb;
+      return dr*dr + dg*dg + db*db <= tol2;
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // One-pass pixel classification
+  // ═══════════════════════════════════════════════════════════
+  function classify(data, w, h, regions) {
+    const matchers = regions.map(r => makeMatcher(r.hex, r.tol));
+    const labels = new Uint8Array(w * h);  // 0 = none, 1..n = region index+1
+    for (let i = 0; i < w * h; i++) {
+      const p = i * 4;
+      const r = data[p], g = data[p+1], b = data[p+2];
+      for (let k = 0; k < matchers.length; k++) {
+        if (matchers[k](r, g, b)) { labels[i] = k + 1; break; }
+      }
+    }
+    return labels;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // H scan: leftmost & rightmost x per row y
+  // ═══════════════════════════════════════════════════════════
+  function scanH(labels, w, h, regionIdx, step) {
+    const left = [], right = [];
+    for (let y = 0; y < h; y += step) {
+      let lx = -1, rx = -1;
+      for (let x = 0; x < w; x++) {
+        if (labels[y * w + x] === regionIdx) {
+          if (lx < 0) lx = x;
+          rx = x;
+        }
+      }
+      if (lx >= 0) { left.push([lx, y]); right.push([rx, y]); }
+    }
+    return { left, right };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // V scan: topmost & bottommost y per col x
+  // ═══════════════════════════════════════════════════════════
+  function scanV(labels, w, h, regionIdx, step) {
+    const top = [], bot = [];
+    for (let x = 0; x < w; x += step) {
+      let ty = -1, by = -1;
+      for (let y = 0; y < h; y++) {
+        if (labels[y * w + x] === regionIdx) {
+          if (ty < 0) ty = y;
+          by = y;
+        }
+      }
+      if (ty >= 0) { top.push([x, ty]); bot.push([x, by]); }
+    }
+    return { top, bot };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Ramer-Douglas-Peucker
+  // ═══════════════════════════════════════════════════════════
+  function rdp(pts, eps) {
+    if (pts.length < 3) return [...pts];
+    const [ax, ay] = pts[0];
+    const [bx, by] = pts[pts.length - 1];
+    const dab = Math.hypot(bx - ax, by - ay);
+    let maxD = 0, maxI = 0;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const [px, py] = pts[i];
+      const d = dab < 1e-9
+        ? Math.hypot(px - ax, py - ay)
+        : Math.abs((by - ay) * px - (bx - ax) * py + bx * ay - by * ax) / dab;
+      if (d > maxD) { maxD = d; maxI = i; }
+    }
+    if (maxD > eps) {
+      const L = rdp(pts.slice(0, maxI + 1), eps);
+      const R = rdp(pts.slice(maxI), eps);
+      return [...L.slice(0, -1), ...R];
+    }
+    return [pts[0], pts[pts.length - 1]];
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Format output
+  // ═══════════════════════════════════════════════════════════
+  function fmtPts(pts, outPx) {
+    const s = outPx / nativeW;
+    return pts.map(([x, y]) =>
+      `${Math.round(x * s)},${Math.round(y * s)}`
+    ).join('  ');
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Draw overlay
+  // ═══════════════════════════════════════════════════════════
+  function drawOverlay(results, showRaw) {
+    const ov = document.getElementById('overlay');
+    const ctx = ov.getContext('2d');
+    ctx.clearRect(0, 0, ov.width, ov.height);
+
+    for (const [rid, rdata] of Object.entries(results)) {
+      const reg = REGIONS.find(r => r.id === rid);
+      const color = reg.draw;
+
+      for (const [btype, { raw, simplified }] of Object.entries(rdata)) {
+        // Raw points — small translucent dots
+        if (showRaw) {
+          ctx.fillStyle = color + '55';
+          for (const [x, y] of raw) {
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Simplified polyline
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        if (simplified.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(simplified[0][0], simplified[0][1]);
+          for (let i = 1; i < simplified.length; i++)
+            ctx.lineTo(simplified[i][0], simplified[i][1]);
+          ctx.stroke();
+        }
+
+        // Simplified points — larger dots
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        for (const [x, y] of simplified) {
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Build output blocks
+  // ═══════════════════════════════════════════════════════════
+  function buildOutput(results, outPx) {
+    const grid = document.getElementById('outputGrid');
+    grid.innerHTML = '';
+
+    for (const [rid, rdata] of Object.entries(results)) {
+      const reg = REGIONS.find(r => r.id === rid);
+      for (const [btype, { simplified }] of Object.entries(rdata)) {
+        const bt = BTYPES.find(b => b.id === btype);
+        const coordStr = fmtPts(simplified, outPx);
+        const nativeStr = simplified.map(([x,y]) => `${x},${y}`).join('  ');
+
+        const block = document.createElement('div');
+        block.className = 'out-block';
+        block.innerHTML = `
+          <div class="out-header">
+            <span>
+              <span class="swatch" style="background:${reg.hex}"></span>
+              <strong>${reg.label}</strong> — ${bt.label}
+              (${simplified.length} pts)
+            </span>
+            <button onclick="copyBlock(this)">copy</button>
+          </div>
+          <textarea readonly rows="3"
+            title="${bt.desc} · native 1920px coords below"
+          >${coordStr}
+--- native 1920px ---
+${nativeStr}</textarea>
+        `;
+        grid.appendChild(block);
+      }
+    }
+  }
+
+  function copyBlock(btn) {
+    const ta = btn.closest('.out-block').querySelector('textarea');
+    const scaled = ta.value.split('\n--- native')[0].trim();
+    navigator.clipboard.writeText(scaled).then(() => {
+      btn.textContent = '✓';
+      setTimeout(() => btn.textContent = 'copy', 1200);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Main scan
+  // ═══════════════════════════════════════════════════════════
+  function runScan() {
+    if (!imgData) { alert('Image not loaded yet'); return; }
+
+    const step = parseInt(document.getElementById('slStep').value);
+    const eps  = parseInt(document.getElementById('slEps').value);
+    const outPx = parseInt(document.getElementById('inCanvasPx').value) || 500;
+    const showRaw = document.getElementById('chkRaw').checked;
+
+    const status = document.getElementById('status');
+    status.textContent = 'classifying…';
+
+    // Defer to let the status render
+    setTimeout(() => {
+      const t0 = performance.now();
+
+      // Active regions only
+      const active = REGIONS.filter(r => activeRegions.has(r.id));
+
+      // One-pass classification
+      const labels = classify(imgData.data, nativeW, nativeH, active);
+
+      const results = {};
+      for (let k = 0; k < active.length; k++) {
+        const reg = active[k];
+        const ridx = k + 1;  // label value for this region
+
+        const { left, right } = scanH(labels, nativeW, nativeH, ridx, step);
+        const { top, bot }    = scanV(labels, nativeW, nativeH, ridx, step);
+
+        results[reg.id] = {
+          hleft:  { raw: left,  simplified: rdp(left,  eps) },
+          hright: { raw: right, simplified: rdp(right, eps) },
+          vtop:   { raw: top,   simplified: rdp(top,   eps) },
+          vbot:   { raw: bot,   simplified: rdp(bot,   eps) },
+        };
+      }
+
+      lastResults = results;
+      const ms = Math.round(performance.now() - t0);
+
+      drawOverlay(results, showRaw);
+      buildOutput(results, outPx);
+
+      const totalPts = Object.values(results).flatMap(r =>
+        Object.values(r).map(b => b.simplified.length)
+      ).reduce((a,b) => a+b, 0);
+
+      status.textContent = `done in ${ms}ms · ${totalPts} simplified pts total`;
+    }, 10);
+  }
+
+  // Re-draw overlay when "show raw" changes
+  document.getElementById('chkRaw').onchange = () => {
+    if (Object.keys(lastResults).length)
+      drawOverlay(lastResults, document.getElementById('chkRaw').checked);
+  };
+  </script>
+</body>
+</html>
