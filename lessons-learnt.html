@@ -71,113 +71,75 @@
   <div class="content">
 
     <!-- ================================================== -->
-    <h2>Proportions &amp; Orientation</h2>
+    <h2>Proportions &amp; Shape Accuracy</h2>
     <ul>
-      <li><strong>Proportions first, details second.</strong> Scale the body to fill the canvas like the reference before touching colour or texture. Wrong proportions make every subsequent fix harder.</li>
-      <li><strong>Each species has defining proportions.</strong> Hummingbird beak ≈50% of body height; blue jay crest is a distinct pointed spike; flat-design robin has orange as the dominant colour (~55% of body). Study these before drawing.</li>
       <li><strong>The artist mirror technique.</strong> Flipping both the drawing and the reference simultaneously reveals proportional errors your brain has adapted to. Use <code>transform="translate(w,0) scale(-1,1)"</code>.</li>
-    </ul>
-
-    <!-- ================================================== -->
-    <h2>Head–Body Connection</h2>
-    <ul>
-      <li><strong>Separate circle + ellipse always looks disconnected.</strong> The real fix is a single <code>&lt;path&gt;</code> for the whole silhouette, with colour regions overlaid on top.</li>
-      <li><strong>Seam fix for same-colour shapes (flat design).</strong> Place the wing path's anchor <em>inside</em> the head circle — the head, drawn later, covers the overlap and seals the gap. Test: <code>sqrt((wx−hx)²+(wy−hy)²) &lt; head_radius</code>. Keep ≥10 px inside for margin.</li>
+      <li><strong>Dominant colour test.</strong> Step back and ask which colour should be the largest area. If it doesn't match what you see, fix the boundary paths before touching anything else. Orange breast should be ~55% of a flat-design robin's body area; if the wing looks dominant, the wing path is too wide.</li>
+      <li><strong>Separate circle + ellipse always looks disconnected.</strong> The real fix is a single <code>&lt;path&gt;</code> for the whole silhouette, with colour regions overlaid on top. Short-term seam fix: place the wing path's anchor <em>inside</em> the head circle so the head (drawn later) covers the gap. Test: <code>dist(wing_start, head_center) &lt; head_radius</code>.</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>SVG Filters &amp; Texture</h2>
     <ul>
-      <li><strong>feTurbulence is the right tool for organic patterns</strong> — feathers, pan-fry marks, bark, cloth. Hand-placed ellipses always look artificial.
+      <li><strong>feTurbulence for any organic pattern</strong> — feathers, pan-fry marks, bark, cloth. Hand-placed ellipses always look artificial.
         <br>Recipe: <code>&lt;feTurbulence baseFrequency="0.038 0.028" numOctaves="3" seed="11"/&gt;</code> →
         <code>&lt;feColorMatrix values="0 0 0 0 0 / 0 0 0 0 0 / 0 0 0 0 0 / 8 0 0 0 -3.2"/&gt;</code> →
-        <code>&lt;feComposite operator="in"/&gt;</code>. Lower baseFrequency = bigger blobs; higher alpha multiplier = sharper edges.</li>
-      <li><strong>Layer multiple turbulence passes</strong> with different seeds and frequencies to vary pattern density (dense fine spots in the throat, larger blobs mid-breast).</li>
-      <li><strong><code>operator="in"</code> composite reveals the source fill colour</strong> where the alpha mask fires — so the source rect/ellipse fill must already be the desired output colour.</li>
-      <li><strong>Filters can bleed outside clipPaths</strong> if the filter region (x/y/width/height) is too large.</li>
+        <code>&lt;feComposite operator="in"/&gt;</code>.
+        Lower baseFrequency = bigger blobs; higher alpha multiplier = sharper edges. Asymmetric frequency (0.042 H, 0.024 V) makes horizontal streaks — good for cooked food textures.</li>
+      <li><strong><code>operator="in"</code> composite reveals the source fill colour</strong> where the alpha mask fires — the source rect/ellipse fill must already be the desired output colour.</li>
+      <li><strong>Filters can bleed outside clipPaths</strong> if the filter region (x/y/width/height) is too large. Always constrain.</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>Gradients &amp; Colour</h2>
     <ul>
-      <li><strong>Radial gradient = sphere.</strong> Never use a centre-bright radial gradient on a flat surface — it reads as a bubble. Use a linear gradient instead.</li>
-      <li><strong>Flat design uses minimal gradients.</strong> One or two subtle linear shades; feTurbulence and complex radials fight the flat aesthetic. Getting colour-area boundaries right matters far more.</li>
-      <li><strong>Stack complementary layers:</strong> linear base + radial patch (pan-fry spots) + turbulence overlay — each adds one cue without fighting the others.</li>
+      <li><strong>Radial gradient = sphere.</strong> Never use a centre-bright radial gradient on a flat surface — it reads as a bubble. Use linear for flat surfaces.</li>
+      <li><strong>Atmosphere tricks:</strong> vignette (<code>radialGradient</code> transparent→black(0.55) as topmost <code>&lt;rect&gt;</code>), warm glow halo (large blurred amber ellipse at opacity 0.07–0.10 under the subject), wood grain (two sets of near-invisible diagonal lines at different angles, opacity 0.05–0.06).</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>Z-Order &amp; Masking</h2>
     <ul>
-      <li><strong>SVG's painter model is a free masking tool.</strong> Draw yellow belly <em>before</em> the dark wing; the wing covers most of it and leaves a visible crescent — no <code>clipPath</code> needed when overlapping shapes share a colour.</li>
-      <li><strong>Never double-draw a shape for masking.</strong> Drawing the wing twice to "mask off" the yellow belly doubled coverage and hid the orange breast entirely. Draw each shape exactly once; rely on z-order.</li>
-      <li><strong>Wing coverage balance (side-view bird):</strong> dark wing ≈45–55% of body area (back/upper), orange breast ≈50–55% (front/lower). Right boundary at mid-height sits close to body centre x. If the drawing looks "too dark", the wing path is too wide.</li>
-    </ul>
-
-    <!-- ================================================== -->
-    <h2>Species-Specific Techniques</h2>
-    <ul>
-      <li><strong>Blue jay crest:</strong> three separate overlapping paths with slight colour variations (#1a3a5c → #2563b8) beat a single ellipse; higher contrast and more defined feather lines than a robin.</li>
-      <li><strong>Hummingbird:</strong> beak length ≈50% of body height is the defining feature; body is nearly perfectly oval when perched; tail barely visible; wings entirely tucked (just a dark oval on the back).</li>
-      <li><strong>Flat geometric robin:</strong> orange is the dominant colour; dark navy wing covers upper-left; blue-gray is a distinct curved band at the top of the wing; golden yellow peeks below the wing bottom edge.</li>
-    </ul>
-
-    <!-- ================================================== -->
-    <h2>Food &amp; Object Techniques</h2>
-    <ul>
-      <li><strong>For food, colour palette matters more than shape accuracy.</strong> There's no skeleton to anchor proportions — any blob of the right colour reads as the dish. Get the hues right first.</li>
-      <li><strong>Perspective plate with <code>&lt;polygon&gt;</code>:</strong> trapezoid (top edge narrower than bottom) creates a convincing angled view. Add a separate front-edge polygon for ceramic thickness.</li>
-      <li><strong>feTurbulence for pan-fry texture:</strong> seed="3", asymmetric baseFrequency (0.042 horizontal, 0.024 vertical) makes horizontal streaks that evoke cooked egg wrinkles. Apply to a clipped <code>&lt;rect&gt;</code> over the omelette.</li>
-      <li><strong>Vignette:</strong> topmost <code>&lt;rect&gt;</code> with a <code>radialGradient</code> transparent→black(0.55) — focuses the eye, mimics camera lens darkening, costs one element.</li>
-      <li><strong>Warm glow halo:</strong> large blurred amber ellipse (opacity 0.07–0.10) under the subject — simulates heat-cast light. Keep opacity very low or it overwhelms.</li>
-      <li><strong>Wood grain:</strong> two sets of near-invisible diagonal lines (opacity 0.05–0.06) at slightly different angles — believable texture at near-zero render cost.</li>
+      <li><strong>SVG's painter model is a free masking tool.</strong> Draw the yellow belly <em>before</em> the dark wing; the wing covers most of it and leaves a visible crescent — no <code>clipPath</code> needed when overlapping shapes share a colour.</li>
+      <li><strong>Never draw a shape twice for masking.</strong> Drawing the wing twice to "mask off" the belly doubled coverage and hid the orange breast entirely. Each shape exactly once; rely on z-order.</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>Bezier Primitives <span class="session-tag">bezier-bird</span></h2>
     <ul>
-      <li><strong>Cubic bezier approximation of circles with k = 0.5523.</strong> Any <code>&lt;ellipse&gt;</code> (cx, cy, rx, ry) becomes four cubic bezier segments:
+      <li><strong>Cubic bezier approximation of a circle: k = 0.5523.</strong> Any <code>&lt;ellipse&gt;</code> (cx, cy, rx, ry) becomes four cubic bezier segments:
         <br><code>M cx,cy-ry  C cx+k·rx,cy-ry  cx+rx,cy-k·ry  cx+rx,cy</code>
         <br><code>C cx+rx,cy+k·ry  cx+k·rx,cy+ry  cx,cy+ry</code>
         <br><code>C cx-k·rx,cy+ry  cx-rx,cy+k·ry  cx-rx,cy</code>
         <br><code>C cx-rx,cy-k·ry  cx-k·rx,cy-ry  cx,cy-ry  Z</code></li>
-      <li><strong>Seam fix scales with head size.</strong> When the head shrinks (r 70 → 50), the old wing-start point that was safely inside may now be outside. Always recheck: <code>dist(wing_start, head_center) &lt; head_radius</code> after every head resize.</li>
-      <li><strong>Parameter cascade: changing one shape forces updates to many others.</strong> Reducing body ry changes the body-bottom y, which shifts leg-start y, foot y, and shadow y. Work top-to-bottom in a single pass rather than fixing shapes one by one.</li>
-      <li><strong>Body aspect ratio for standing flat-design bird: ~1.8–2.0 width:height.</strong> An equal-rx-ry body looks like a ball; ry ≈ rx/2 reads as a natural perched posture. Legs need to be ~15–20% of canvas height to look credible.</li>
-      <li><strong>Head-to-body width ratio ≈ 30–35%</strong> for a flat geometric bird. The default r=70 on a 500px canvas (diameter 140, body width 296) is 47% — far too big. r=50 (diameter 100, ~34%) matches the reference.</li>
+      <li><strong>Parameter cascade: changing one shape forces updates downstream.</strong> Reducing body ry changes body-bottom y → leg-start y → foot y → shadow y. Work top-to-bottom in one pass.</li>
+      <li><strong>Head-to-body width ratio ≈ 30–35%</strong> for a flat geometric bird. r=70 on a 500px canvas is 47% (too big); r=50 is 34% (correct). Body aspect ratio for a perched bird: rx/ry ≈ 1.8–2.0 (a circular body reads as a ball).</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>Triangle Tessellation <span class="session-tag">triangle-bird</span></h2>
     <ul>
-      <li><strong>Fan tessellation from a centroid covers any convex region.</strong> Pick an interior point, then connect it to consecutive perimeter points. Each pair of adjacent perimeter points + the fan centre = one triangle. Best for the body, wing, head, and tail where you can find a point roughly in the middle.</li>
-      <li><strong>Strip tessellation covers band-shaped regions.</strong> Given a top polyline and a bottom polyline of the same length, pair adjacent column quads and split each quad diagonally into two triangles. Best for the blue-gray wing stripe.</li>
-      <li><strong>Fan centre placement matters.</strong> The fan centre becomes the visual focal point of all seam lines. Placing it near the geometric centre of the region minimises the longest spoke and keeps triangle aspect ratios reasonable. An off-centre fan centre produces very thin slivers at the far edge.</li>
-      <li><strong>Triangle seam lines are inherent but subtle at normal size.</strong> Adjacent same-coloured triangles produce sub-pixel anti-aliasing gaps — visible at 2×+ zoom, nearly invisible at 1×. Accept this as an aesthetic feature of the technique rather than trying to hide it.</li>
-      <li><strong>Pixel scanning beats coordinate guessing.</strong> Use <code>canvas.getImageData</code> to scan the topmost-y per x (back arch), rightmost-x per y (breast), leftmost-x per y (body left), rightmost dark-navy per y (wing boundary), and color-specific per row/column (tail, blue-gray strip). Each scan type suits a different feature geometry.</li>
-      <li><strong>A line-art calibration overlay is essential before building the triangle file.</strong> Create a separate HTML file (e.g. <code>baseline-lineart.html</code>) with <code>viewBox="0 0 1920 1920"</code> matching the photo's native resolution. Overlay coloured polygon/polyline strokes on the photo and iterate until every line sits on its feature. Only then scale the coordinates to the drawing canvas.</li>
-      <li><strong>Scale once at the end.</strong> Do all coordinate work in the photo's native pixel space (e.g. 1920×1920), then apply a single scale factor (<code>500/1920 = 0.2604</code>) uniformly to all points. Avoids rounding errors from intermediate rescaling.</li>
-      <li><strong>Z-order determines the final colour regions.</strong> The triangle constraint produces no curved edges, so overlapping layers do the smoothing work. Draw the belly before the wing so the wing covers the interior, leaving only a crescent visible — identical to the bezier/path approach.</li>
+      <li><strong>Fan tessellation</strong> (centroid → consecutive perimeter pairs) covers any roughly convex region. <strong>Strip tessellation</strong> (quad columns between top/bottom polylines, split diagonally) covers band-shaped features. Use fan for body, wing, head, tail; strip for the blue-gray accent.</li>
+      <li><strong>Fan centre placement matters.</strong> Near the geometric centre minimises the longest spoke and avoids thin slivers at the far edge. The centre becomes the visual focal point of all seam lines.</li>
+      <li><strong>Triangle seam lines are inherent.</strong> Adjacent same-coloured triangles produce sub-pixel anti-aliasing gaps — visible at 2×+ zoom, negligible at 1×. Accept as an aesthetic feature.</li>
+      <li><strong>Pixel scan, then draw.</strong> Use <code>canvas.getImageData</code>: topmost-y per x (back arch), rightmost-x per y (breast), color-specific per row/column (tail, blue-gray strip), angular radial sweep (head boundary). Each scan type suits a different feature geometry.</li>
+      <li><strong>Line-art calibration overlay before the triangle file.</strong> Separate HTML with <code>viewBox</code> matching the photo's native resolution; overlay coloured strokes on the photo and iterate until every line sits correctly. Scale all coordinates once at the end (<code>500/1920 = 0.2604</code>).</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>Bezier Stroke Outlines <span class="session-tag">bezier-outline-bird</span></h2>
     <ul>
-      <li><strong><code>fill="none"</code> on every path is a complete drawing technique.</strong> Coloured strokes alone — no fills at all — produce readable, expressive line art. The viewer's eye infers the colour regions from the boundary lines.</li>
-      <li><strong>Colour-code strokes by region, not by outline role.</strong> Use the region's own colour as the stroke colour (orange for the body silhouette, dark navy for the head, orange-red for the tail) rather than a neutral black. This reads immediately as a colour sketch rather than a technical diagram.</li>
-      <li><strong>Open paths carry boundary information just as well as closed ones.</strong> The wing boundary, blue-gray strip edges, and belly arc are all open <code>&lt;path&gt;</code> elements — they communicate the colour region without enclosing any area to fill.</li>
-      <li><strong>Catmull-Rom to cubic bezier gives smooth curves through scanned points.</strong> For consecutive points P<sub>i-1</sub>, P<sub>i</sub>, P<sub>i+1</sub>, P<sub>i+2</sub>: <code>CP1 = Pᵢ + (Pᵢ₊₁ − Pᵢ₋₁)/6</code>, <code>CP2 = Pᵢ₊₁ − (Pᵢ₊₂ − Pᵢ)/6</code>. At endpoints, mirror the missing neighbour (set P<sub>-1</sub> = P<sub>0</sub> or P<sub>n+1</sub> = P<sub>n</sub>).</li>
-      <li><strong>A fill toggle bridges outline and filled modes.</strong> Add <code>data-fill="colour"</code> to closed paths; JS reads the attribute to apply or remove the fill. Users can compare the two modes side-by-side in one page. Open paths (legs, belly arc, strip edges) are excluded automatically since they have no <code>data-fill</code>.</li>
-      <li><strong>Close a beak path with Z to make it fillable.</strong> A V-shaped beak drawn as two open curves fills to nothing — Z closes the triangle from the tip back to the start, making <code>data-fill</code> work correctly.</li>
-      <li><strong>The dynamic label reinforces the toggle state.</strong> Updating <code>textContent</code> on the label element ("Outlines Only" ↔ "Outlines + Fills") prevents confusion when the visual change is subtle at small sizes.</li>
-      <li><strong>Dark page background makes coloured strokes pop.</strong> The semi-transparent SVG background (<code>rgba(255,255,255,0.05)</code>) on the dark green page provides just enough contrast to read thin strokes without washing them out.</li>
+      <li><strong><code>fill="none"</code> on every path is a complete drawing technique.</strong> Coloured strokes alone produce readable, expressive line art — the viewer infers the colour regions from the boundary lines.</li>
+      <li><strong>Colour-code strokes by region, not by outline role.</strong> Use the region's own colour as the stroke (orange for body, dark navy for head, orange-red for tail) rather than a neutral black. Open paths work as boundary markers without enclosing any area.</li>
+      <li><strong>Catmull-Rom to cubic bezier gives smooth curves through scanned points.</strong> For segment Pᵢ→Pᵢ₊₁: <code>CP1 = Pᵢ + (Pᵢ₊₁ − Pᵢ₋₁)/6</code>, <code>CP2 = Pᵢ₊₁ − (Pᵢ₊₂ − Pᵢ)/6</code>. Mirror the missing neighbour at endpoints (P₋₁ = P₀, Pₙ₊₁ = Pₙ).</li>
+      <li><strong>Fill toggle via <code>data-fill</code>.</strong> Add <code>data-fill="colour"</code> to closed paths; JS swaps <code>fill</code> between the stored colour and <code>"none"</code>. Open paths are excluded automatically — they have no attribute to read. Close a V-shaped path with Z before assigning <code>data-fill</code> or the fill has no area to paint.</li>
     </ul>
 
     <!-- ================================================== -->
     <h2>Workflow</h2>
     <ul>
-      <li><strong>Five render-feedback iterations, not one.</strong> View in browser → zoom into problem areas → identify <em>specific</em> failures → fix exactly those → repeat. Never speculate about what will look good; see it first.</li>
-      <li><strong>Tracing beats freehand for accuracy.</strong> Match the SVG viewBox to the photo's pixel dimensions and use the reference as a semi-transparent overlay.</li>
-      <li><strong>Dominant colour test:</strong> step back and ask which colour should be the largest area. If it doesn't match what you see, fix the boundary paths before touching anything else.</li>
+      <li><strong>Five render-feedback iterations.</strong> View → zoom into problem areas → identify specific failures → fix exactly those → repeat. Never speculate; see it first.</li>
+      <li><strong>Tracing beats freehand for accuracy.</strong> Match the SVG <code>viewBox</code> to the photo's pixel dimensions and use the reference as a semi-transparent overlay to calibrate before building the final file.</li>
     </ul>
 
   </div>
