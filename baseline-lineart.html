@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Line Art Overlay — calibration</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #111; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; }
+    h2 { color: #eee; font-family: monospace; font-size: 14px; }
+    svg { display: block; width: 800px; height: 800px; border: 1px solid #444; }
+    label { color: #ccc; font-family: monospace; font-size: 13px; cursor: pointer; }
+    .controls { display: flex; gap: 20px; align-items: center; }
+    input[type=range] { width: 120px; }
+  </style>
+</head>
+<body>
+  <h2>Line-art overlay — iterate until lines match the image</h2>
+  <div class="controls">
+    <label><input type="checkbox" id="toggleImg" checked> Show photo</label>
+    <label>Photo opacity: <input type="range" id="imgOpacity" min="0" max="100" value="80"></label>
+    <label><input type="checkbox" id="toggleLines" checked> Show lines</label>
+    <label>Line opacity: <input type="range" id="lineOpacity" min="0" max="100" value="100"></label>
+  </div>
+
+  <!--
+    viewBox = 1920×1920 (matches baseline.jpg native resolution)
+    All coordinates below are in that pixel space.
+    Line colours:
+      red    = body outline
+      lime   = head outline
+      cyan   = wing boundary (dark/orange split)
+      yellow = blue-gray strip
+      magenta= tail
+      white  = beak
+      orange = eye
+      blue   = leg/foot lines
+  -->
+  <svg id="svg" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Reference photo as background -->
+    <image id="photo" href="images/baseline.jpg"
+           x="0" y="0" width="1920" height="1920" preserveAspectRatio="xMidYMid meet"/>
+
+    <g id="lines" fill="none" stroke-width="8">
+
+      <!-- BODY OUTLINE (red) — pixel-scanned outer silhouette
+           Back arch (topmost y per x, scan-measured):
+             x=690→y=800  x=750→y=750  x=810→y=700  x=870→y=660
+             x=930→y=620  x=990→y=585  x=1050→y=530  x=1100→y=495
+           Neck transition to breast (estimated through head):
+             x=1250→y=530  x=1400→y=620
+           Right breast (scan-measured rightmost x per y):
+             y=700→x=1468  y=800→x=1457  y=900→x=1444  y=1000→x=1407
+             y=1100→x=1339  y=1200→x=1213
+           Body bottom centre: y=1240,x=870
+           Left side (scan-measured leftmost x per y):
+             y=1200→x=342  y=1100→x=386  y=1000→x=484  y=900→x=584
+      -->
+      <polygon stroke="red" stroke-width="6" fill="none"
+        points="690,800  750,750  810,700  870,660  930,620  990,585  1050,530  1100,495
+                1250,530  1400,620
+                1468,700  1457,800  1444,900  1407,1000
+                1339,1100 1213,1200
+                870,1240
+                342,1200
+                386,1100  484,1000
+                584,900   690,800"/>
+
+      <!-- HEAD OUTLINE (lime) — radial scan from centre (1320,560), every 20°
+           Outermost dark-navy pixel per angle (0°=right, clockwise):
+           340°→(1464,508)  300°→(1382,453)  260°→(1298,434)  220°→(1187,449)
+           180°→(1120,560)  140°→(1242,626)  100°→(1302,664)   60°→(1420,733) -->
+      <polygon stroke="lime" stroke-width="6" fill="none"
+        points="1464,508  1382,453  1298,434  1187,449
+                1120,560  1242,626  1302,664  1420,733"/>
+
+      <!-- BEAK (white) — shares attachment pts with head polygon:
+           upper (1464,508) → tip (1691,600) → lower (1420,733) -->
+      <polygon stroke="white" stroke-width="6" fill="none"
+        points="1464,508  1691,600  1420,733"/>
+
+      <!-- EYE (orange) — measured: x=1348-1379, y=600-623, tight around the white dot -->
+      <polygon stroke="orange" stroke-width="5" fill="none"
+        points="1363,597  1382,608  1382,618  1363,629  1344,618  1344,608"/>
+
+      <!-- WING RIGHT BOUNDARY (cyan) — pixel-scanned rightmost dark-navy per row
+           y=750→x=1171  y=800→x=1166  y=850→x=1147  y=900→x=1112
+           y=950→x=1053  y=1000→x=961  y=1050→x=821  y=1100→x=578 -->
+      <polyline stroke="cyan" stroke-width="7"
+        points="1171,750  1166,800  1147,850  1112,900  1053,950  961,1000  821,1050  578,1100"/>
+
+      <!-- BLUE-GRAY STRIP (yellow) — pixel-scanned isBluGray per column
+           top: x=700→792  x=750→749  x=800→709  x=850→671  x=900→637  x=950→606  x=1000→573  x=1050→587  x=1100→488
+           bot: x=700→874  x=750→852  x=800→831  x=850→810  x=900→789  x=950→770  x=1000→752  x=1050→738  x=1100→727 -->
+      <polyline stroke="yellow" stroke-width="5"
+        points="700,792  750,749  800,709  850,671  900,637  950,606  1000,573  1050,587  1100,488"/>
+      <polyline stroke="yellow" stroke-width="5"
+        points="700,874  750,852  800,831  850,810  900,789  950,770  1000,752  1050,738  1100,727"/>
+
+      <!-- TAIL (magenta) — pixel-scanned orange-red extents per row
+           right boundary: y=1100→626  y=1150→549  y=1200→475  y=1250→407  y=1300→339  y=1375→232
+           left boundary:  y=1100→584  y=1150→393  y=1200→343  y=1250→294  y=1300→244  y=1375→201 -->
+      <polygon stroke="magenta" stroke-width="6" fill="none"
+        points="584,1100  626,1100  549,1150  475,1200  407,1250  339,1300  220,1375
+                201,1375  244,1300  294,1250  343,1200  393,1150  418,1125"/>
+
+      <!-- FRONT LEG (blue) — scan: x=849-896, center=873, y≈1240-1460 -->
+      <polyline stroke="#4af" stroke-width="7" points="873,1240  873,1460"/>
+      <!-- BACK LEG (blue) — scan: x=1110-1157, center=1134, y≈1240-1460 -->
+      <polyline stroke="#4af" stroke-width="7" points="1134,1240  1134,1460"/>
+
+      <!-- FEET (blue) — scan at y=1470: front=817..1079, back=1091..1342 -->
+      <polyline stroke="#4af" stroke-width="6" points="817,1470  873,1455  1079,1475"/>
+      <polyline stroke="#4af" stroke-width="6" points="1091,1470  1134,1455  1342,1475"/>
+
+    </g>
+  </svg>
+
+  <script>
+    const photo = document.getElementById('photo');
+    const lines = document.getElementById('lines');
+    const svg  = document.getElementById('svg');
+
+    document.getElementById('toggleImg').addEventListener('change', e => {
+      photo.style.display = e.target.checked ? '' : 'none';
+    });
+    document.getElementById('imgOpacity').addEventListener('input', e => {
+      photo.style.opacity = e.target.value / 100;
+    });
+    document.getElementById('toggleLines').addEventListener('change', e => {
+      lines.style.display = e.target.checked ? '' : 'none';
+    });
+    document.getElementById('lineOpacity').addEventListener('input', e => {
+      lines.style.opacity = e.target.value / 100;
+    });
+
+    // Coordinate readout — hover over SVG to see SVG-space pixel coords
+    const coords = document.createElement('div');
+    coords.style.cssText = 'color:#0f0;font-family:monospace;font-size:13px;min-width:160px;';
+    coords.textContent = 'x: — , y: —';
+    document.querySelector('.controls').appendChild(coords);
+
+    svg.addEventListener('mousemove', e => {
+      const r = svg.getBoundingClientRect();
+      const scaleX = 1920 / r.width;
+      const scaleY = 1920 / r.height;
+      const x = Math.round((e.clientX - r.left) * scaleX);
+      const y = Math.round((e.clientY - r.top)  * scaleY);
+      coords.textContent = `x: ${x} , y: ${y}`;
+    });
+
+    // Click to log
+    svg.addEventListener('click', e => {
+      const r = svg.getBoundingClientRect();
+      const x = Math.round((e.clientX - r.left) * 1920 / r.width);
+      const y = Math.round((e.clientY - r.top)  * 1920 / r.height);
+      console.log(`clicked: ${x}, ${y}`);
+    });
+  </script>
+</body>
+</html>

@@ -147,6 +147,19 @@
     </ul>
 
     <!-- ================================================== -->
+    <h2>Triangle Tessellation <span class="session-tag">triangle-bird</span></h2>
+    <ul>
+      <li><strong>Fan tessellation from a centroid covers any convex region.</strong> Pick an interior point, then connect it to consecutive perimeter points. Each pair of adjacent perimeter points + the fan centre = one triangle. Best for the body, wing, head, and tail where you can find a point roughly in the middle.</li>
+      <li><strong>Strip tessellation covers band-shaped regions.</strong> Given a top polyline and a bottom polyline of the same length, pair adjacent column quads and split each quad diagonally into two triangles. Best for the blue-gray wing stripe.</li>
+      <li><strong>Fan centre placement matters.</strong> The fan centre becomes the visual focal point of all seam lines. Placing it near the geometric centre of the region minimises the longest spoke and keeps triangle aspect ratios reasonable. An off-centre fan centre produces very thin slivers at the far edge.</li>
+      <li><strong>Triangle seam lines are inherent but subtle at normal size.</strong> Adjacent same-coloured triangles produce sub-pixel anti-aliasing gaps — visible at 2×+ zoom, nearly invisible at 1×. Accept this as an aesthetic feature of the technique rather than trying to hide it.</li>
+      <li><strong>Pixel scanning beats coordinate guessing.</strong> Use <code>canvas.getImageData</code> to scan the topmost-y per x (back arch), rightmost-x per y (breast), leftmost-x per y (body left), rightmost dark-navy per y (wing boundary), and color-specific per row/column (tail, blue-gray strip). Each scan type suits a different feature geometry.</li>
+      <li><strong>A line-art calibration overlay is essential before building the triangle file.</strong> Create a separate HTML file (e.g. <code>baseline-lineart.html</code>) with <code>viewBox="0 0 1920 1920"</code> matching the photo's native resolution. Overlay coloured polygon/polyline strokes on the photo and iterate until every line sits on its feature. Only then scale the coordinates to the drawing canvas.</li>
+      <li><strong>Scale once at the end.</strong> Do all coordinate work in the photo's native pixel space (e.g. 1920×1920), then apply a single scale factor (<code>500/1920 = 0.2604</code>) uniformly to all points. Avoids rounding errors from intermediate rescaling.</li>
+      <li><strong>Z-order determines the final colour regions.</strong> The triangle constraint produces no curved edges, so overlapping layers do the smoothing work. Draw the belly before the wing so the wing covers the interior, leaving only a crescent visible — identical to the bezier/path approach.</li>
+    </ul>
+
+    <!-- ================================================== -->
     <h2>Workflow</h2>
     <ul>
       <li><strong>Five render-feedback iterations, not one.</strong> View in browser → zoom into problem areas → identify <em>specific</em> failures → fix exactly those → repeat. Never speculate about what will look good; see it first.</li>
