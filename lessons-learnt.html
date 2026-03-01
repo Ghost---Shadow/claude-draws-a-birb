@@ -136,6 +136,15 @@
     </ul>
 
     <!-- ================================================== -->
+    <h2>Pixel Scanning &amp; Automation <span class="session-tag">scanner</span></h2>
+    <ul>
+      <li><strong>No single colour region yields the full outer silhouette.</strong> When features overlap (wing sits on top of body), the orange body scan misses the back arch entirely — it's hidden under the wing. The outer silhouette must be assembled from multiple region boundaries: orange H-scan for breast and belly; dark-navy V-top for the back arch (the wing's top edge <em>is</em> the bird's outer back).</li>
+      <li><strong>H-scan vs V-scan suit different feature geometries.</strong> H-scan (leftmost / rightmost x per row y) works best for mostly-vertical boundaries like breast and tail sides. V-scan (topmost / bottommost y per column x) works best for mostly-horizontal boundaries like the back arch and belly bottom.</li>
+      <li><strong>RDP ε ≈ 12 at step 4 is a reasonable default</strong> for a 1920 px reference scaled to 500 px. Produces ~10–20 pts per region boundary — enough for smooth Catmull-Rom bezier without over-fitting noise.</li>
+      <li><strong>Scan output is a starting point, not a finished path.</strong> The automated boundaries need stitching, seam-point selection, and a Catmull-Rom pass before they become usable SVG <code>&lt;path&gt;</code> data. Features with poor colour separation (orange tail ≈ orange body) or complex topology (legs inside body bbox) require manual override.</li>
+    </ul>
+
+    <!-- ================================================== -->
     <h2>Workflow</h2>
     <ul>
       <li><strong>Five render-feedback iterations.</strong> View → zoom into problem areas → identify specific failures → fix exactly those → repeat. Never speculate; see it first.</li>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Scanner Bezier Outline</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── toggle switch ── */
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      color: #e8dcc8;
+      user-select: none;
+    }
+    .toggle-label input { display: none; }
+    .toggle-track {
+      width: 42px; height: 24px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 12px;
+      position: relative;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle-label input:checked ~ .toggle-track {
+      background: rgba(232,131,78,0.55);
+      border-color: rgba(232,131,78,0.7);
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      background: #e8dcc8;
+      border-radius: 50%;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle-label input:checked ~ .toggle-track .toggle-thumb {
+      transform: translateX(18px);
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb - Scanner Bezier Outline</h1>
+
+  <div class="controls">
+    <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <label class="toggle-label">
+      <input type="checkbox" id="fillToggle" onchange="toggleFill(this)">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      Show Fills
+    </label>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label" id="drawingLabel">My SVG Drawing (Scanner Coords)</div>
+
+      <!--
+        Paths generated from baseline-scanner.html pixel boundary output.
+        Each region was classified by RGB proximity, boundary scanned H+V,
+        then simplified with Ramer-Douglas-Peucker (ε=12) at step=4.
+        Bezier control points computed via Catmull-Rom → cubic bezier.
+
+        AUTO (scanner-derived):
+          Body silhouette  →  orange H-left-rev (left) + dark-navy V-top (back arch)
+                              + orange H-right (breast) + orange V-bottom-rev (belly)
+          Wing boundary    →  dark navy H-right (wing portion, y 195–291)
+          Belly arc        →  golden belly V-top
+
+        MANUAL (scanner had insufficient accuracy):
+          Tail outline, blue-gray strip, head, beak, eye, legs/feet
+      -->
+      <svg id="myDrawing" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ── BODY SILHOUETTE — scanner computed ──
+             Source: H-left-rev (lower-left) + dark-navy V-top (back arch, true outer boundary)
+                   + orange H-right (breast) + orange V-bottom-rev (belly)
+             Key insight: orange H-left traces BELOW the wing; dark-navy V-top gives the
+             correct back arch by tracing the wing's top edge = bird's true outer silhouette.
+             Catmull-Rom → cubic bezier through 21 RDP-simplified boundary points.
+        -->
+        <path fill="none" stroke="#e8834e" stroke-width="3.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#e8834e"
+              d="M  54,359
+                 C  54,358   44,360   53,349
+                 C  62,338  102,302  110,292
+                 C 118,282   94,296  100,288
+                 C 106,280  118,258  144,243
+                 C 170,228  239,212  258,197
+                 C 277,182  255,159  259,151
+                 C 263,143  274,150  284,151
+                 C 294,153  302,153  318,160
+                 C 334,167  369,185  379,195
+                 C 389,206  379,214  378,223
+                 C 377,232  377,239  371,251
+                 C 365,263  352,283  341,294
+                 C 330,305  319,311  307,317
+                 C 295,323  277,326  271,328
+                 C 265,330  277,328  269,328
+                 C 261,328  240,330  225,329
+                 C 211,328  196,325  182,320
+                 C 168,316  160,296  140,302
+                 C 120,308   75,349   60,358
+                 C  45,367   52,356   51,356
+                 C  50,356   54,360   54,359
+                 Z"/>
+
+        <!-- ── TAIL OUTLINE — manual ── -->
+        <path fill="none" stroke="#d96040" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#d96040"
+              d="M 163,287
+                 C 160,289  150,296  143,300
+                 C 137,304  130,309  124,313
+                 C 118,317  112,322  106,326
+                 C 100,330   96,334   88,339
+                 C  80,344   62,355   57,358
+                 L  52,358
+                 C  54,355   60,344   64,339
+                 C  68,334   73,330   77,326
+                 C  81,322   85,315   89,313
+                 C  93,311   99,303  102,300
+                 C 105,297  101,295  109,293
+                 C 117,291  145,288  152,287
+                 Z"/>
+
+        <!-- ── WING RIGHT BOUNDARY — scanner computed ──
+             Source: dark navy H-right scan, wing portion only (y 195–291).
+             6 RDP-simplified points → Catmull-Rom bezier.
+        -->
+        <path fill="none" stroke="#8fb0be" stroke-width="2.5"
+              stroke-linecap="round"
+              d="M 305,195
+                 C 305,198  304,209  302,215
+                 C 300,221  300,225  291,233
+                 C 282,241  263,255  246,263
+                 C 229,271  209,275  187,280
+                 C 165,285  125,289  113,291"/>
+
+        <!-- ── BLUE-GRAY STRIP — TOP EDGE — manual ── -->
+        <path fill="none" stroke="#8fb0be" stroke-width="2"
+              stroke-linecap="round"
+              d="M 182,206
+                 C 184,204  191,199  195,195
+                 C 199,192  204,188  208,185
+                 C 212,182  217,178  221,175
+                 C 225,172  230,169  234,166
+                 C 238,163  243,161  247,158
+                 C 251,155  256,150  260,149
+                 C 264,148  269,157  273,153
+                 C 277,149  284,131  286,127"/>
+
+        <!-- ── BLUE-GRAY STRIP — BOTTOM EDGE — manual ── -->
+        <path fill="none" stroke="#8fb0be" stroke-width="2"
+              stroke-linecap="round"
+              d="M 182,228
+                 C 184,227  191,224  195,222
+                 C 199,220  204,218  208,216
+                 C 212,214  217,213  221,211
+                 C 225,209  230,207  234,205
+                 C 238,203  243,202  247,200
+                 C 251,199  256,197  260,196
+                 C 264,195  269,193  273,192
+                 C 277,191  284,190  286,189"/>
+
+        <!-- ── HEAD OUTLINE — manual ── -->
+        <path fill="none" stroke="#c8dce8" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#253146"
+              d="M 381,132
+                 C 379,120  367,121  360,118
+                 C 353,115  347,113  338,113
+                 C 330,113  317,112  309,117
+                 C 301,123  290,138  292,146
+                 C 294,154  315,159  323,163
+                 C 331,168  331,168  339,173
+                 C 347,178  363,198  370,191
+                 C 377,184  383,144  381,132
+                 Z"/>
+
+        <!-- ── BEAK — manual ── -->
+        <path fill="none" stroke="#c8dce8" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#253146"
+              d="M 381,132
+                 C 400,135  430,148  440,156
+                 C 430,165  395,185  370,191
+                 Z"/>
+
+        <!-- ── EYE — manual ── -->
+        <path fill="none" stroke="#ffffff" stroke-width="2"
+              data-fill="#ffffff"
+              d="M 355,155
+                 C 357.2,155  359,156.8  359,159
+                 C 359,161.2  357.2,163  355,163
+                 C 352.8,163  351,161.2  351,159
+                 C 351,156.8  352.8,155  355,155
+                 Z"/>
+
+        <!-- ── BELLY ARC — scanner computed ──
+             Source: golden belly V-top (topmost y per column = upper belly boundary).
+             8 RDP-simplified points → Catmull-Rom bezier.
+        -->
+        <path fill="none" stroke="#f5b942" stroke-width="2"
+              stroke-linecap="round"
+              d="M 155,309
+                 C 167,313  209,327  227,330
+                 C 245,333  253,330  264,329
+                 C 275,328  281,328  294,322
+                 C 307,316  330,304  341,295
+                 C 352,286  356,278  361,269
+                 C 367,260  371,251  374,242
+                 C 377,233  378,219  379,214"/>
+
+        <!-- ── FRONT LEG — manual ── -->
+        <path fill="none" stroke="#a0b8c8" stroke-width="2.5"
+              stroke-linecap="round"
+              d="M 227,323 L 227,380"/>
+        <path fill="none" stroke="#a0b8c8" stroke-width="2"
+              stroke-linecap="round"
+              d="M 213,383 C 218,381 222,380 227,379 C 248,380 265,382 281,384"/>
+
+        <!-- ── BACK LEG — manual ── -->
+        <path fill="none" stroke="#a0b8c8" stroke-width="2.5"
+              stroke-linecap="round"
+              d="M 295,323 L 295,380"/>
+        <path fill="none" stroke="#a0b8c8" stroke-width="2"
+              stroke-linecap="round"
+              d="M 284,383 C 287,381 291,380 295,379 C 315,380 333,382 350,384"/>
+
+      </svg>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference (baseline.jpg)</div>
+      <img id="refPhoto" src="images/baseline.jpg" alt="Reference bird photo">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    Reference photo: <a href="images/baseline.jpg" target="_blank">baseline.jpg</a>
+    &bull; <a href="baseline-scanner.html">Scanner Tool</a>
+    &bull; <a href="lessons-learnt.html">Lessons Learnt</a>
+    &bull; <a href="index.html">Gallery</a>
+  </div>
+
+  <script>
+    let flipped = false;
+    function flipBoth() {
+      flipped = !flipped;
+      const t = flipped ? 'scaleX(-1)' : '';
+      document.getElementById('myDrawing').style.transform = t;
+      document.getElementById('refPhoto').style.transform = t;
+    }
+
+    function toggleFill(checkbox) {
+      const on = checkbox.checked;
+      document.querySelectorAll('[data-fill]').forEach(el => {
+        el.setAttribute('fill', on ? el.dataset.fill : 'none');
+      });
+      document.getElementById('drawingLabel').textContent =
+        on ? 'My SVG Drawing (Scanner Coords + Fills)' : 'My SVG Drawing (Scanner Coords)';
+    }
+  </script>
+</body>
+</html>
