@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Bezier Outline Bird</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb - Bezier Outline Bird</h1>
+
+  <div class="controls">
+    <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label">My SVG Drawing (Bezier Stroke Outlines Only)</div>
+
+      <!--
+        Pure stroke-only bezier line art. No fills — every path has fill="none".
+        All coordinates from pixel scans of baseline.jpg (1920×1920) scaled ×0.2604.
+        Bezier control points computed via Catmull-Rom → cubic bezier conversion:
+          For segment Pi→Pi+1:  CP1 = Pi + (Pi+1−Pi-1)/6
+                                CP2 = Pi+1 − (Pi+2−Pi)/6
+
+        Colour key (matching the reference plumage):
+          Body silhouette  →  #e8834e  (orange)
+          Wing boundary    →  #8fb0be  (blue-gray, separates wing from breast)
+          Tail outline     →  #d96040  (orange-red)
+          Blue-gray strip  →  #8fb0be  (blue-gray)
+          Head outline     →  #c8dce8  (pale blue, visible on dark bg)
+          Beak             →  #c8dce8  (pale)
+          Eye              →  #ffffff  (white)
+          Legs / feet      →  #a0b8c8  (pale gray-blue)
+      -->
+      <svg id="myDrawing" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ── BODY SILHOUETTE ──
+             Closed path tracing the full outer body contour.
+             Points (CW): left-side up → back arch → neck → breast → bottom.
+             Catmull-Rom bezier through all 21 perimeter points.
+        -->
+        <path fill="none" stroke="#e8834e" stroke-width="3.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              d="M 89,313
+                 C  91,309   95,296  101,287
+                 C 107,278  118,269  126,260
+                 C 135,251  143,243  152,234
+                 C 161,225  173,215  180,208
+                 C 187,202  190,199  195,195
+                 C 200,191  206,186  211,182
+                 C 216,178  222,175  227,172
+                 C 232,169  237,165  242,162
+                 C 247,159  253,156  258,152
+                 C 263,148  268,142  273,138
+                 C 278,134  277,128  286,129
+                 C 295,131  313,133  326,138
+                 C 339,144  356,155  365,162
+                 C 374,169  380,174  382,182
+                 C 384,190  380,199  379,208
+                 C 378,217  378,225  376,234
+                 C 374,243  371,251  366,260
+                 C 362,269  357,278  349,287
+                 C 341,296  336,307  316,313
+                 C 296,319  265,323  227,323
+                 C 189,323  110,319   89,313
+                 Z"/>
+
+        <!-- ── TAIL OUTLINE ──
+             Closed path from body-left attachment → tail tip → back.
+             Right edge: (163,287)→(143,300)→(124,313)→(106,326)→(88,339)→(57,358)
+             Tip join:   L 52,358
+             Left edge:  (64,339)→(77,326)→(89,313)→(102,300)→(109,293)→(152,287)
+        -->
+        <path fill="none" stroke="#d96040" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              d="M 163,287
+                 C 160,289  150,296  143,300
+                 C 137,304  130,309  124,313
+                 C 118,317  112,322  106,326
+                 C 100,330   96,334   88,339
+                 C  80,344   62,355   57,358
+                 L  52,358
+                 C  54,355   60,344   64,339
+                 C  68,334   73,330   77,326
+                 C  81,322   85,315   89,313
+                 C  93,311   99,303  102,300
+                 C 105,297  101,295  109,293
+                 C 117,291  145,288  152,287
+                 Z"/>
+
+        <!-- ── WING RIGHT BOUNDARY ──
+             Line separating the dark wing (left) from the orange breast (right).
+             Points: (305,195)→…→(151,287)
+        -->
+        <path fill="none" stroke="#8fb0be" stroke-width="2.5"
+              stroke-linecap="round"
+              d="M 305,195
+                 C 305,197  305,204  304,208
+                 C 303,212  301,217  299,221
+                 C 297,225  294,230  290,234
+                 C 286,238  281,243  274,247
+                 C 267,251  260,256  250,260
+                 C 240,264  231,269  214,273
+                 C 198,278  162,285  151,287"/>
+
+        <!-- ── BLUE-GRAY STRIP — TOP EDGE ──
+             Upper boundary of the blue-gray accent on the wing.
+             Points: (182,206)→(195,195)→(208,185)→(221,175)→(234,166)
+                     →(247,158)→(260,149)→(273,153)→(286,127)
+        -->
+        <path fill="none" stroke="#8fb0be" stroke-width="2"
+              stroke-linecap="round"
+              d="M 182,206
+                 C 184,204  191,199  195,195
+                 C 199,192  204,188  208,185
+                 C 212,182  217,178  221,175
+                 C 225,172  230,169  234,166
+                 C 238,163  243,161  247,158
+                 C 251,155  256,150  260,149
+                 C 264,148  269,157  273,153
+                 C 277,149  284,131  286,127"/>
+
+        <!-- ── BLUE-GRAY STRIP — BOTTOM EDGE ──
+             Lower boundary of the blue-gray accent.
+             Points: (182,228)→(195,222)→(208,216)→(221,211)→(234,205)
+                     →(247,200)→(260,196)→(273,192)→(286,189)
+        -->
+        <path fill="none" stroke="#8fb0be" stroke-width="2"
+              stroke-linecap="round"
+              d="M 182,228
+                 C 184,227  191,224  195,222
+                 C 199,220  204,218  208,216
+                 C 212,214  217,213  221,211
+                 C 225,209  230,207  234,205
+                 C 238,203  243,202  247,200
+                 C 251,199  256,197  260,196
+                 C 264,195  269,193  273,192
+                 C 277,191  284,190  286,189"/>
+
+        <!-- ── HEAD OUTLINE ──
+             Closed path from radial pixel scan, centre (344,146).
+             Points CW: (381,132)→(360,118)→(338,113)→(309,117)
+                        →(292,146)→(323,163)→(339,173)→(370,191)
+        -->
+        <path fill="none" stroke="#c8dce8" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round"
+              d="M 381,132
+                 C 379,120  367,121  360,118
+                 C 353,115  347,113  338,113
+                 C 330,113  317,112  309,117
+                 C 301,123  290,138  292,146
+                 C 294,154  315,159  323,163
+                 C 331,168  331,168  339,173
+                 C 347,178  363,198  370,191
+                 C 377,184  383,144  381,132
+                 Z"/>
+
+        <!-- ── BEAK ──
+             Two curved lines from head attachment points to tip (440,156).
+        -->
+        <path fill="none" stroke="#c8dce8" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              d="M 381,132
+                 C 400,135  430,148  440,156
+                 C 430,165  395,185  370,191"/>
+
+        <!-- ── EYE ──
+             Small circle at (355,159) r≈4, drawn as two bezier arcs.
+             k = 0.5523 × 4 ≈ 2.2
+        -->
+        <path fill="none" stroke="#ffffff" stroke-width="2"
+              d="M 355,155
+                 C 357.2,155  359,156.8  359,159
+                 C 359,161.2  357.2,163  355,163
+                 C 352.8,163  351,161.2  351,159
+                 C 351,156.8  352.8,155  355,155
+                 Z"/>
+
+        <!-- ── BELLY ARC ──
+             Lower boundary of the wing = upper boundary of the yellow belly.
+             Runs from wing bottom-left (151,287) across to body bottom-right (316,313).
+             Catmull-Rom through wing boundary bottom points: 214,273 → 151,287 → 89,313
+        -->
+        <path fill="none" stroke="#f5b942" stroke-width="2"
+              stroke-linecap="round"
+              d="M 151,287
+                 C 168,295  210,310  227,323
+                 C 257,322  290,318  316,313"/>
+
+        <!-- ── FRONT LEG ── -->
+        <path fill="none" stroke="#a0b8c8" stroke-width="2.5"
+              stroke-linecap="round"
+              d="M 227,323 L 227,380"/>
+        <!-- Front toes -->
+        <path fill="none" stroke="#a0b8c8" stroke-width="2"
+              stroke-linecap="round"
+              d="M 213,383 C 218,381 222,380 227,379 C 248,380 265,382 281,384"/>
+
+        <!-- ── BACK LEG ── -->
+        <path fill="none" stroke="#a0b8c8" stroke-width="2.5"
+              stroke-linecap="round"
+              d="M 295,323 L 295,380"/>
+        <!-- Back toes -->
+        <path fill="none" stroke="#a0b8c8" stroke-width="2"
+              stroke-linecap="round"
+              d="M 284,383 C 287,381 291,380 295,379 C 315,380 333,382 350,384"/>
+
+      </svg>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference (baseline.jpg)</div>
+      <img id="refPhoto" src="images/baseline.jpg" alt="Reference bird photo">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    Reference photo: <a href="images/baseline.jpg" target="_blank">baseline.jpg</a>
+    &bull; <a href="lessons-learnt.html">Lessons Learnt</a>
+    &bull; <a href="index.html">Gallery</a>
+  </div>
+
+  <script>
+    let flipped = false;
+    function flipBoth() {
+      flipped = !flipped;
+      const t = flipped ? 'scaleX(-1)' : '';
+      document.getElementById('myDrawing').style.transform = t;
+      document.getElementById('refPhoto').style.transform = t;
+    }
+  </script>
+</body>
+</html>

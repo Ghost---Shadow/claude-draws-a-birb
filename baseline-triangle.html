@@ -2,214 +2,314 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Triangle Bird — baseline-triangle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Triangle Bird</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    svg { display: block; }
-    .back {
-      position: fixed; top: 1rem; left: 1rem;
-      background: rgba(0,0,0,0.07); border: 1px solid rgba(0,0,0,0.15);
-      color: #555; padding: 0.45rem 0.9rem; border-radius: 6px;
-      font-family: Georgia, serif; font-size: 0.85rem;
-      text-decoration: none; transition: background 0.2s;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
     }
-    .back:hover { background: rgba(0,0,0,0.13); }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <a class="back" href="index.html">← Back to Gallery</a>
-  <!--
-    All coordinates pixel-scanned from baseline.jpg (1920×1920),
-    then scaled ×(500/1920)=0.2604 to fit 500×500 canvas.
+  <h1>Claude Draws a Birb - Triangle Bird</h1>
 
-    Key scan results (1920px → 500px):
-      Back arch:    (180,208)→(195,195)→(211,182)→(227,172)→(242,162)→(258,152)→(273,138)→(286,129)
-      Neck:         (326,138)→(365,162)
-      Right breast: (382,182)→(379,208)→(376,234)→(366,260)→(349,287)→(316,313)
-      Bottom:       (227,323)
-      Left side:    (89,313)→(101,287)→(126,260)→(152,234)→(180,208)
-      Wing right:   (305,195)→(304,208)→(299,221)→(290,234)→(274,247)→(250,260)→(214,273)→(151,287)
-      Blue-gray top: (182,206)→(195,195)→(208,185)→(221,175)→(234,166)→(247,158)→(260,149)→(273,153)→(286,127)
-      Blue-gray bot: (182,228)→(195,222)→(208,216)→(221,211)→(234,205)→(247,200)→(260,196)→(273,192)→(286,189)
-      Head (radial): (381,132)→(360,118)→(338,113)→(309,117)→(292,146)→(323,163)→(339,173)→(370,191)
-      Head centre:  (344,146)
-      Beak:         (381,132)→tip(440,156)→(370,191)
-      Eye centre:   (355,159)  r≈4
-      Tail right:   (163,287)→(143,300)→(124,313)→(106,326)→(88,339)→(57,358)
-      Tail left:    (52,358)→(64,339)→(77,326)→(89,313)→(102,300)→(109,293)→(152,287)
-      Front leg:    x=227, y=323–380
-      Back leg:     x=295, y=323–380
-      Front foot:   (213,383)→(227,379)→(281,384)
-      Back foot:    (284,383)→(295,379)→(350,384)
+  <div class="controls">
+    <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
 
-    RULE: only <polygon> with exactly 3 points (triangles). No other shapes.
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label">My SVG Drawing (Triangles Only)</div>
 
-    Z-order (painter model, bottom→top):
-      1. Shadow
-      2. Orange body (fan from 250,260)
-      3. Yellow belly (fan from 268,295)
-      4. Orange-red tail (fan from 163,287)
-      5. Dark wing (fan from 210,248)
-      6. Blue-gray accent (strip tessellation)
-      7. Dark head (fan from 344,146)
-      8. Beak
-      9. Eye
-     10. Legs / feet
-  -->
-  <svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+      <!--
+        All coordinates pixel-scanned from baseline.jpg (1920×1920),
+        then scaled ×(500/1920)=0.2604 to fit 500×500 canvas.
 
-    <!-- ── 1. SHADOW ── -->
-    <polygon points="213,390  350,390  370,398" fill="#c8d0d8" opacity="0.55"/>
-    <polygon points="213,390  370,398  193,398" fill="#c8d0d8" opacity="0.55"/>
+        Key scan results (1920px → 500px):
+          Back arch:    (180,208)→(195,195)→(211,182)→(227,172)→(242,162)→(258,152)→(273,138)→(286,129)
+          Neck:         (326,138)→(365,162)
+          Right breast: (382,182)→(379,208)→(376,234)→(366,260)→(349,287)→(316,313)
+          Bottom:       (227,323)
+          Left side:    (89,313)→(101,287)→(126,260)→(152,234)→(180,208)
+          Wing right:   (305,195)→(304,208)→(299,221)→(290,234)→(274,247)→(250,260)→(214,273)→(151,287)
+          Blue-gray top: (182,206)→(195,195)→(208,185)→(221,175)→(234,166)→(247,158)→(260,149)→(273,153)→(286,127)
+          Blue-gray bot: (182,228)→(195,222)→(208,216)→(221,211)→(234,205)→(247,200)→(260,196)→(273,192)→(286,189)
+          Head (radial): (381,132)→(360,118)→(338,113)→(309,117)→(292,146)→(323,163)→(339,173)→(370,191)
+          Head centre:  (344,146)
+          Beak:         (381,132)→tip(440,156)→(370,191)
+          Eye centre:   (355,159)  r≈4
+          Tail right:   (163,287)→(143,300)→(124,313)→(106,326)→(88,339)→(57,358)
+          Tail left:    (52,358)→(64,339)→(77,326)→(89,313)→(102,300)→(109,293)→(152,287)
+          Front leg:    x=227, y=323–380
+          Back leg:     x=295, y=323–380
+          Front foot:   (213,383)→(227,379)→(281,384)
+          Back foot:    (284,383)→(295,379)→(350,384)
 
-    <!-- ── 2. ORANGE BODY ──
-         Fan centre: (250,260)
-         Perimeter (clockwise): back arch → neck → right breast → bottom → left side
-    -->
-    <polygon points="250,260  180,208  195,195" fill="#e8834e"/>
-    <polygon points="250,260  195,195  211,182" fill="#e8834e"/>
-    <polygon points="250,260  211,182  227,172" fill="#e8834e"/>
-    <polygon points="250,260  227,172  242,162" fill="#e8834e"/>
-    <polygon points="250,260  242,162  258,152" fill="#e8834e"/>
-    <polygon points="250,260  258,152  273,138" fill="#e8834e"/>
-    <polygon points="250,260  273,138  286,129" fill="#e8834e"/>
-    <polygon points="250,260  286,129  326,138" fill="#e8834e"/>
-    <polygon points="250,260  326,138  365,162" fill="#e8834e"/>
-    <polygon points="250,260  365,162  382,182" fill="#e8834e"/>
-    <polygon points="250,260  382,182  379,208" fill="#e8834e"/>
-    <polygon points="250,260  379,208  376,234" fill="#e8834e"/>
-    <polygon points="250,260  376,234  366,260" fill="#e8834e"/>
-    <polygon points="250,260  366,260  349,287" fill="#e8834e"/>
-    <polygon points="250,260  349,287  316,313" fill="#e8834e"/>
-    <polygon points="250,260  316,313  227,323" fill="#e8834e"/>
-    <polygon points="250,260  227,323   89,313" fill="#e8834e"/>
-    <polygon points="250,260   89,313  101,287" fill="#e8834e"/>
-    <polygon points="250,260  101,287  126,260" fill="#e8834e"/>
-    <polygon points="250,260  126,260  152,234" fill="#e8834e"/>
-    <polygon points="250,260  152,234  180,208" fill="#e8834e"/>
+        RULE: only <polygon> with exactly 3 points (triangles). No other shapes.
 
-    <!-- ── 3. YELLOW BELLY ──
-         Lower-front region below wing boundary. Fan centre: (268,295)
-    -->
-    <polygon points="268,295  250,260  214,273" fill="#f5b942"/>
-    <polygon points="268,295  214,273  151,287" fill="#f5b942"/>
-    <polygon points="268,295  151,287  101,287" fill="#f5b942"/>
-    <polygon points="268,295  101,287   89,313" fill="#f5b942"/>
-    <polygon points="268,295   89,313  227,323" fill="#f5b942"/>
-    <polygon points="268,295  227,323  316,313" fill="#f5b942"/>
-    <polygon points="268,295  316,313  349,287" fill="#f5b942"/>
-    <polygon points="268,295  349,287  366,260" fill="#f5b942"/>
-    <polygon points="268,295  366,260  250,260" fill="#f5b942"/>
+        Z-order (painter model, bottom→top):
+          1. Shadow
+          2. Orange body (fan from 250,260)
+          3. Yellow belly (fan from 268,295)
+          4. Orange-red tail (fan from 163,287)
+          5. Dark wing (fan from 210,248)
+          6. Blue-gray accent (strip tessellation)
+          7. Dark head (fan from 344,146)
+          8. Beak
+          9. Eye
+         10. Legs / feet
+      -->
+      <svg id="myDrawing" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
 
-    <!-- ── 4. ORANGE-RED TAIL ──
-         Fan from upper-right vertex (163,287).
-         Right boundary: (143,300)(124,313)(106,326)(88,339)(57,358)
-         Tip: (52,358)
-         Left boundary: (64,339)(77,326)(89,313)(102,300)(109,293)(152,287)
-    -->
-    <polygon points="163,287  143,300  124,313" fill="#d96040"/>
-    <polygon points="163,287  124,313  106,326" fill="#d96040"/>
-    <polygon points="163,287  106,326   88,339" fill="#d96040"/>
-    <polygon points="163,287   88,339   57,358" fill="#d96040"/>
-    <polygon points="163,287   57,358   52,358" fill="#d96040"/>
-    <polygon points="163,287   52,358   64,339" fill="#d96040"/>
-    <polygon points="163,287   64,339   77,326" fill="#d96040"/>
-    <polygon points="163,287   77,326   89,313" fill="#d96040"/>
-    <polygon points="163,287   89,313  102,300" fill="#d96040"/>
-    <polygon points="163,287  102,300  109,293" fill="#d96040"/>
-    <polygon points="163,287  109,293  152,287" fill="#d96040"/>
+        <!-- ── 1. SHADOW ── -->
+        <polygon points="213,390  350,390  370,398" fill="#c8d0d8" opacity="0.55"/>
+        <polygon points="213,390  370,398  193,398" fill="#c8d0d8" opacity="0.55"/>
 
-    <!-- ── 5. DARK WING ──
-         Fan centre: (210,248)
-         Perimeter: back arch → shoulder cut → wing right boundary → body left side
-    -->
-    <polygon points="210,248  180,208  195,195" fill="#253146"/>
-    <polygon points="210,248  195,195  211,182" fill="#253146"/>
-    <polygon points="210,248  211,182  227,172" fill="#253146"/>
-    <polygon points="210,248  227,172  242,162" fill="#253146"/>
-    <polygon points="210,248  242,162  258,152" fill="#253146"/>
-    <polygon points="210,248  258,152  273,138" fill="#253146"/>
-    <polygon points="210,248  273,138  286,129" fill="#253146"/>
-    <polygon points="210,248  286,129  305,195" fill="#253146"/>
-    <polygon points="210,248  305,195  304,208" fill="#253146"/>
-    <polygon points="210,248  304,208  299,221" fill="#253146"/>
-    <polygon points="210,248  299,221  290,234" fill="#253146"/>
-    <polygon points="210,248  290,234  274,247" fill="#253146"/>
-    <polygon points="210,248  274,247  250,260" fill="#253146"/>
-    <polygon points="210,248  250,260  214,273" fill="#253146"/>
-    <polygon points="210,248  214,273  151,287" fill="#253146"/>
-    <polygon points="210,248  151,287  126,260" fill="#253146"/>
-    <polygon points="210,248  126,260  152,234" fill="#253146"/>
-    <polygon points="210,248  152,234  180,208" fill="#253146"/>
+        <!-- ── 2. ORANGE BODY ──
+             Fan centre: (250,260)
+             Perimeter (clockwise): back arch → neck → right breast → bottom → left side
+        -->
+        <polygon points="250,260  180,208  195,195" fill="#e8834e"/>
+        <polygon points="250,260  195,195  211,182" fill="#e8834e"/>
+        <polygon points="250,260  211,182  227,172" fill="#e8834e"/>
+        <polygon points="250,260  227,172  242,162" fill="#e8834e"/>
+        <polygon points="250,260  242,162  258,152" fill="#e8834e"/>
+        <polygon points="250,260  258,152  273,138" fill="#e8834e"/>
+        <polygon points="250,260  273,138  286,129" fill="#e8834e"/>
+        <polygon points="250,260  286,129  326,138" fill="#e8834e"/>
+        <polygon points="250,260  326,138  365,162" fill="#e8834e"/>
+        <polygon points="250,260  365,162  382,182" fill="#e8834e"/>
+        <polygon points="250,260  382,182  379,208" fill="#e8834e"/>
+        <polygon points="250,260  379,208  376,234" fill="#e8834e"/>
+        <polygon points="250,260  376,234  366,260" fill="#e8834e"/>
+        <polygon points="250,260  366,260  349,287" fill="#e8834e"/>
+        <polygon points="250,260  349,287  316,313" fill="#e8834e"/>
+        <polygon points="250,260  316,313  227,323" fill="#e8834e"/>
+        <polygon points="250,260  227,323   89,313" fill="#e8834e"/>
+        <polygon points="250,260   89,313  101,287" fill="#e8834e"/>
+        <polygon points="250,260  101,287  126,260" fill="#e8834e"/>
+        <polygon points="250,260  126,260  152,234" fill="#e8834e"/>
+        <polygon points="250,260  152,234  180,208" fill="#e8834e"/>
 
-    <!-- ── 6. BLUE-GRAY ACCENT ──
-         Pixel-scanned strip along top of wing.
-         Each column pair: upper(x,ytop)→upper(x+Δ,ytop) + lower(x,ybot)→lower(x+Δ,ybot)
-         Tessellated as pairs of triangles left→right.
-    -->
-    <!-- col 182→195 -->
-    <polygon points="182,206  195,195  195,222" fill="#8fb0be"/>
-    <polygon points="182,206  195,222  182,228" fill="#8fb0be"/>
-    <!-- col 195→208 -->
-    <polygon points="195,195  208,185  208,216" fill="#8fb0be"/>
-    <polygon points="195,195  208,216  195,222" fill="#8fb0be"/>
-    <!-- col 208→221 -->
-    <polygon points="208,185  221,175  221,211" fill="#8fb0be"/>
-    <polygon points="208,185  221,211  208,216" fill="#8fb0be"/>
-    <!-- col 221→234 -->
-    <polygon points="221,175  234,166  234,205" fill="#8fb0be"/>
-    <polygon points="221,175  234,205  221,211" fill="#8fb0be"/>
-    <!-- col 234→247 -->
-    <polygon points="234,166  247,158  247,200" fill="#8fb0be"/>
-    <polygon points="234,166  247,200  234,205" fill="#8fb0be"/>
-    <!-- col 247→260 -->
-    <polygon points="247,158  260,149  260,196" fill="#8fb0be"/>
-    <polygon points="247,158  260,196  247,200" fill="#8fb0be"/>
-    <!-- col 260→273 -->
-    <polygon points="260,149  273,153  273,192" fill="#8fb0be"/>
-    <polygon points="260,149  273,192  260,196" fill="#8fb0be"/>
-    <!-- col 273→286 -->
-    <polygon points="273,153  286,127  286,189" fill="#8fb0be"/>
-    <polygon points="273,153  286,189  273,192" fill="#8fb0be"/>
+        <!-- ── 3. YELLOW BELLY ──
+             Lower-front region below wing boundary. Fan centre: (268,295)
+        -->
+        <polygon points="268,295  250,260  214,273" fill="#f5b942"/>
+        <polygon points="268,295  214,273  151,287" fill="#f5b942"/>
+        <polygon points="268,295  151,287  101,287" fill="#f5b942"/>
+        <polygon points="268,295  101,287   89,313" fill="#f5b942"/>
+        <polygon points="268,295   89,313  227,323" fill="#f5b942"/>
+        <polygon points="268,295  227,323  316,313" fill="#f5b942"/>
+        <polygon points="268,295  316,313  349,287" fill="#f5b942"/>
+        <polygon points="268,295  349,287  366,260" fill="#f5b942"/>
+        <polygon points="268,295  366,260  250,260" fill="#f5b942"/>
 
-    <!-- ── 7. DARK HEAD ──
-         Fan centre: (344,146)
-         Boundary from radial pixel scan (clockwise from upper-right):
-         (381,132)(360,118)(338,113)(309,117)(292,146)(323,163)(339,173)(370,191)
-    -->
-    <polygon points="344,146  381,132  360,118" fill="#253146"/>
-    <polygon points="344,146  360,118  338,113" fill="#253146"/>
-    <polygon points="344,146  338,113  309,117" fill="#253146"/>
-    <polygon points="344,146  309,117  292,146" fill="#253146"/>
-    <polygon points="344,146  292,146  323,163" fill="#253146"/>
-    <polygon points="344,146  323,163  339,173" fill="#253146"/>
-    <polygon points="344,146  339,173  370,191" fill="#253146"/>
-    <polygon points="344,146  370,191  381,132" fill="#253146"/>
+        <!-- ── 4. ORANGE-RED TAIL ──
+             Fan from upper-right vertex (163,287).
+             Right boundary: (143,300)(124,313)(106,326)(88,339)(57,358)
+             Tip: (52,358)
+             Left boundary: (64,339)(77,326)(89,313)(102,300)(109,293)(152,287)
+        -->
+        <polygon points="163,287  143,300  124,313" fill="#d96040"/>
+        <polygon points="163,287  124,313  106,326" fill="#d96040"/>
+        <polygon points="163,287  106,326   88,339" fill="#d96040"/>
+        <polygon points="163,287   88,339   57,358" fill="#d96040"/>
+        <polygon points="163,287   57,358   52,358" fill="#d96040"/>
+        <polygon points="163,287   52,358   64,339" fill="#d96040"/>
+        <polygon points="163,287   64,339   77,326" fill="#d96040"/>
+        <polygon points="163,287   77,326   89,313" fill="#d96040"/>
+        <polygon points="163,287   89,313  102,300" fill="#d96040"/>
+        <polygon points="163,287  102,300  109,293" fill="#d96040"/>
+        <polygon points="163,287  109,293  152,287" fill="#d96040"/>
 
-    <!-- ── 8. BEAK ──
-         Shares attachment points with head polygon.
-    -->
-    <polygon points="381,132  440,156  370,191" fill="#253146"/>
+        <!-- ── 5. DARK WING ──
+             Fan centre: (210,248)
+             Perimeter: back arch → shoulder cut → wing right boundary → body left side
+        -->
+        <polygon points="210,248  180,208  195,195" fill="#253146"/>
+        <polygon points="210,248  195,195  211,182" fill="#253146"/>
+        <polygon points="210,248  211,182  227,172" fill="#253146"/>
+        <polygon points="210,248  227,172  242,162" fill="#253146"/>
+        <polygon points="210,248  242,162  258,152" fill="#253146"/>
+        <polygon points="210,248  258,152  273,138" fill="#253146"/>
+        <polygon points="210,248  273,138  286,129" fill="#253146"/>
+        <polygon points="210,248  286,129  305,195" fill="#253146"/>
+        <polygon points="210,248  305,195  304,208" fill="#253146"/>
+        <polygon points="210,248  304,208  299,221" fill="#253146"/>
+        <polygon points="210,248  299,221  290,234" fill="#253146"/>
+        <polygon points="210,248  290,234  274,247" fill="#253146"/>
+        <polygon points="210,248  274,247  250,260" fill="#253146"/>
+        <polygon points="210,248  250,260  214,273" fill="#253146"/>
+        <polygon points="210,248  214,273  151,287" fill="#253146"/>
+        <polygon points="210,248  151,287  126,260" fill="#253146"/>
+        <polygon points="210,248  126,260  152,234" fill="#253146"/>
+        <polygon points="210,248  152,234  180,208" fill="#253146"/>
 
-    <!-- ── 9. EYE ── White diamond, centre (355,159), r=4 -->
-    <polygon points="355,155  359,159  351,159" fill="#ffffff"/>
-    <polygon points="359,159  355,163  351,159" fill="#ffffff"/>
+        <!-- ── 6. BLUE-GRAY ACCENT ──
+             Pixel-scanned strip along top of wing.
+             Each column pair: upper(x,ytop)→upper(x+Δ,ytop) + lower(x,ybot)→lower(x+Δ,ybot)
+             Tessellated as pairs of triangles left→right.
+        -->
+        <!-- col 182→195 -->
+        <polygon points="182,206  195,195  195,222" fill="#8fb0be"/>
+        <polygon points="182,206  195,222  182,228" fill="#8fb0be"/>
+        <!-- col 195→208 -->
+        <polygon points="195,195  208,185  208,216" fill="#8fb0be"/>
+        <polygon points="195,195  208,216  195,222" fill="#8fb0be"/>
+        <!-- col 208→221 -->
+        <polygon points="208,185  221,175  221,211" fill="#8fb0be"/>
+        <polygon points="208,185  221,211  208,216" fill="#8fb0be"/>
+        <!-- col 221→234 -->
+        <polygon points="221,175  234,166  234,205" fill="#8fb0be"/>
+        <polygon points="221,175  234,205  221,211" fill="#8fb0be"/>
+        <!-- col 234→247 -->
+        <polygon points="234,166  247,158  247,200" fill="#8fb0be"/>
+        <polygon points="234,166  247,200  234,205" fill="#8fb0be"/>
+        <!-- col 247→260 -->
+        <polygon points="247,158  260,149  260,196" fill="#8fb0be"/>
+        <polygon points="247,158  260,196  247,200" fill="#8fb0be"/>
+        <!-- col 260→273 -->
+        <polygon points="260,149  273,153  273,192" fill="#8fb0be"/>
+        <polygon points="260,149  273,192  260,196" fill="#8fb0be"/>
+        <!-- col 273→286 -->
+        <polygon points="273,153  286,127  286,189" fill="#8fb0be"/>
+        <polygon points="273,153  286,189  273,192" fill="#8fb0be"/>
 
-    <!-- ── 10. LEGS & FEET ── -->
-    <!-- Front leg x=227 -->
-    <polygon points="224,323  230,323  227,380" fill="#253146"/>
-    <polygon points="224,323  227,380  221,380" fill="#253146"/>
-    <!-- Front toes -->
-    <polygon points="213,383  227,379  220,390" fill="#253146"/>
-    <polygon points="227,379  281,384  274,391" fill="#253146"/>
-    <!-- Back leg x=295 -->
-    <polygon points="292,323  298,323  295,380" fill="#253146"/>
-    <polygon points="292,323  295,380  289,380" fill="#253146"/>
-    <!-- Back toes -->
-    <polygon points="284,383  295,379  288,390" fill="#253146"/>
-    <polygon points="295,379  350,384  343,391" fill="#253146"/>
+        <!-- ── 7. DARK HEAD ──
+             Fan centre: (344,146)
+             Boundary from radial pixel scan (clockwise from upper-right):
+             (381,132)(360,118)(338,113)(309,117)(292,146)(323,163)(339,173)(370,191)
+        -->
+        <polygon points="344,146  381,132  360,118" fill="#253146"/>
+        <polygon points="344,146  360,118  338,113" fill="#253146"/>
+        <polygon points="344,146  338,113  309,117" fill="#253146"/>
+        <polygon points="344,146  309,117  292,146" fill="#253146"/>
+        <polygon points="344,146  292,146  323,163" fill="#253146"/>
+        <polygon points="344,146  323,163  339,173" fill="#253146"/>
+        <polygon points="344,146  339,173  370,191" fill="#253146"/>
+        <polygon points="344,146  370,191  381,132" fill="#253146"/>
 
-  </svg>
+        <!-- ── 8. BEAK ──
+             Shares attachment points with head polygon.
+        -->
+        <polygon points="381,132  440,156  370,191" fill="#253146"/>
+
+        <!-- ── 9. EYE ── White diamond, centre (355,159), r=4 -->
+        <polygon points="355,155  359,159  351,159" fill="#ffffff"/>
+        <polygon points="359,159  355,163  351,159" fill="#ffffff"/>
+
+        <!-- ── 10. LEGS & FEET ── -->
+        <!-- Front leg x=227 -->
+        <polygon points="224,323  230,323  227,380" fill="#253146"/>
+        <polygon points="224,323  227,380  221,380" fill="#253146"/>
+        <!-- Front toes -->
+        <polygon points="213,383  227,379  220,390" fill="#253146"/>
+        <polygon points="227,379  281,384  274,391" fill="#253146"/>
+        <!-- Back leg x=295 -->
+        <polygon points="292,323  298,323  295,380" fill="#253146"/>
+        <polygon points="292,323  295,380  289,380" fill="#253146"/>
+        <!-- Back toes -->
+        <polygon points="284,383  295,379  288,390" fill="#253146"/>
+        <polygon points="295,379  350,384  343,391" fill="#253146"/>
+
+      </svg>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference (baseline.jpg)</div>
+      <img id="refPhoto" src="images/baseline.jpg" alt="Reference bird photo">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    Reference photo: <a href="images/baseline.jpg" target="_blank">baseline.jpg</a>
+    &bull; <a href="lessons-learnt.html">Lessons Learnt</a>
+    &bull; <a href="index.html">Gallery</a>
+  </div>
+
+  <script>
+    let flipped = false;
+    function flipBoth() {
+      flipped = !flipped;
+      const t = flipped ? 'scaleX(-1)' : '';
+      document.getElementById('myDrawing').style.transform = t;
+      document.getElementById('refPhoto').style.transform = t;
+    }
+  </script>
 </body>
 </html>
