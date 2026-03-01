@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Cardinal (Description Only)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      max-width: 500px;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Northern Cardinal</h1>
+  <p class="subtitle">Drawn from description only — no reference photo used.<br>
+  "A male Northern Cardinal perching on a branch. Distinctive red plumage, black face mask, prominent crest, orange-red conical beak."</p>
+
+  <div class="controls">
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <!-- 500x500 viewBox, flat geometric style -->
+  <svg id="cardinal" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Branch wood grain gradient -->
+      <linearGradient id="branchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#8B6040"/>
+        <stop offset="100%" stop-color="#5C3D20"/>
+      </linearGradient>
+      <!-- Body red gradient - lighter top-right -->
+      <linearGradient id="bodyRed" x1="70%" y1="10%" x2="30%" y2="90%">
+        <stop offset="0%" stop-color="#E83030"/>
+        <stop offset="100%" stop-color="#B81818"/>
+      </linearGradient>
+      <!-- Wing red gradient - slightly darker to give depth -->
+      <linearGradient id="wingRed" x1="70%" y1="0%" x2="30%" y2="100%">
+        <stop offset="0%" stop-color="#C82020"/>
+        <stop offset="100%" stop-color="#941010"/>
+      </linearGradient>
+      <!-- Crest gradient -->
+      <linearGradient id="crestRed" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" stop-color="#E84040"/>
+        <stop offset="100%" stop-color="#C82020"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ===================== BRANCH ===================== -->
+    <!-- Main branch going diagonally across lower portion -->
+    <path d="M 50,390 Q 180,370 320,365 Q 420,362 470,358"
+          stroke="url(#branchGrad)" stroke-width="22" stroke-linecap="round" fill="none"/>
+    <!-- Branch bark texture lines -->
+    <path d="M 80,385 Q 160,372 260,368"
+          stroke="#7A5030" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5"/>
+
+    <!-- ===================== TAIL ===================== -->
+    <!-- Cardinal tail: long, rounded at end, hangs down behind body -->
+    <!-- Cardinals have medium-length tails, slightly rounded -->
+    <path d="M 130,300 Q 90,330 72,368 Q 80,382 96,374 Q 120,345 148,318 Z"
+          fill="url(#wingRed)"/>
+    <!-- Middle tail feathers (slightly brighter) -->
+    <path d="M 148,305 Q 108,342 88,378 Q 100,390 118,378 Q 145,348 165,315 Z"
+          fill="#C82020"/>
+    <!-- Right tail feather -->
+    <path d="M 163,308 Q 128,348 112,385 Q 125,395 142,382 Q 165,355 178,320 Z"
+          fill="#B81818" opacity="0.9"/>
+
+    <!-- ===================== BODY ===================== -->
+    <!-- Main red body ellipse - perching bird, more elongated horizontal -->
+    <ellipse cx="250" cy="295" rx="155" ry="95" fill="url(#bodyRed)"/>
+
+    <!-- ===================== WING ===================== -->
+    <!-- Wing sits on body - slightly darker red with visible feather boundary -->
+    <path d="
+      M 300,210
+      Q 265,188 215,178
+      Q 165,170 135,200
+      Q 118,220 118,255
+      L 122,320
+      Q 140,348 170,352
+      Q 200,355 228,342
+      Q 248,328 255,300
+      Q 262,272 258,240
+      Q 255,220 300,210
+      Z"
+          fill="url(#wingRed)"/>
+
+    <!-- Wing feather detail lines -->
+    <path d="M 145,210 Q 180,200 230,195"
+          stroke="#A01818" stroke-width="2.5" fill="none" opacity="0.7"/>
+    <path d="M 135,240 Q 170,228 225,222"
+          stroke="#A01818" stroke-width="2" fill="none" opacity="0.6"/>
+    <path d="M 128,270 Q 160,258 215,252"
+          stroke="#A01818" stroke-width="2" fill="none" opacity="0.5"/>
+    <path d="M 128,300 Q 158,292 210,285"
+          stroke="#A01818" stroke-width="2" fill="none" opacity="0.5"/>
+
+    <!-- ===================== HEAD ===================== -->
+    <!-- Cardinal head: round, slightly forward-facing -->
+    <circle cx="345" cy="195" r="68" fill="url(#bodyRed)"/>
+
+    <!-- ===================== CREST ===================== -->
+    <!-- Cardinal crest: tall, swept BACK (rearward), prominent pointed tip -->
+    <!-- Main crest feather - swept back toward tail direction -->
+    <path d="M 328,135 Q 318,100 308,68 Q 318,40 338,48 Q 355,58 352,90 Q 348,115 342,132 Z"
+          fill="url(#crestRed)"/>
+    <!-- Secondary crest feather, slightly behind first -->
+    <path d="M 338,132 Q 330,95 328,65 Q 342,44 358,55 Q 368,72 360,102 Q 354,120 345,130 Z"
+          fill="#D02828" opacity="0.8"/>
+    <!-- Third, shorter crest feather at back -->
+    <path d="M 348,130 Q 345,100 348,76 Q 360,58 372,68 Q 375,88 365,110 Q 358,122 350,130 Z"
+          fill="#C02020" opacity="0.6"/>
+    <!-- Crest base blending into head -->
+    <path d="M 312,142 Q 330,130 355,126 Q 370,124 378,132 Q 360,140 338,136 Z"
+          fill="#D02020"/>
+
+    <!-- ===================== BLACK FACE MASK ===================== -->
+    <!-- Cardinal mask: covers lores, chin, and throat area — NOT the whole head -->
+    <!-- Mask goes from beak base, around eye socket, down to throat -->
+    <path d="
+      M 342,170
+      Q 358,162 385,168
+      Q 405,176 415,188
+      Q 408,205 395,210
+      Q 375,215 355,210
+      Q 332,205 322,192
+      Q 318,180 328,172
+      Q 335,168 342,170
+      Z"
+          fill="#111111"/>
+    <!-- Throat/chin mask drop below beak -->
+    <path d="M 328,195 Q 336,218 342,240 Q 325,244 310,232 Q 303,215 315,198 Z"
+          fill="#111111"/>
+
+    <!-- ===================== EYE ===================== -->
+    <!-- White eye ring, then dark pupil - sits in mask area -->
+    <circle cx="370" cy="178" r="14" fill="white"/>
+    <circle cx="372" cy="179" r="9" fill="#1A1A1A"/>
+    <circle cx="375" cy="177" r="3.5" fill="white"/>
+
+    <!-- ===================== BEAK ===================== -->
+    <!-- Cardinal beak: large conical, orange, very chunky for seed-cracking -->
+    <!-- Upper mandible - large and curved downward at tip -->
+    <path d="M 400,172 Q 435,172 455,183 Q 435,188 400,188 Z" fill="#E06020"/>
+    <!-- Lower mandible - slightly smaller, lighter -->
+    <path d="M 400,188 Q 432,188 450,183 Q 430,196 400,196 Z" fill="#C85010"/>
+    <!-- Beak ridge line -->
+    <line x1="400" y1="180" x2="452" y2="183" stroke="#D05818" stroke-width="2"/>
+    <!-- Tomia (cutting edge of beak) -->
+    <line x1="400" y1="188" x2="450" y2="184" stroke="#B04010" stroke-width="1.5"/>
+
+    <!-- ===================== FEET / LEGS ===================== -->
+    <!-- Perching feet gripping the branch -->
+    <!-- Left leg -->
+    <path d="M 235,358 L 230,375 L 218,390" stroke="#8B4020" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- Left front toe -->
+    <path d="M 230,375 L 248,387" stroke="#8B4020" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <!-- Left back toe -->
+    <path d="M 230,375 L 210,382" stroke="#8B4020" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+    <!-- Right leg -->
+    <path d="M 268,358 L 265,375 L 255,390" stroke="#8B4020" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- Right front toe -->
+    <path d="M 265,375 L 282,386" stroke="#8B4020" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <!-- Right back toe -->
+    <path d="M 265,375 L 245,383" stroke="#8B4020" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+    <!-- ===================== GROUND SHADOW ===================== -->
+    <ellipse cx="252" cy="398" rx="90" ry="6" fill="#1a3a0a" opacity="0.3"/>
+  </svg>
+
+  <div class="footer-link">
+    <p>Drawn from text description only — no reference photo used.</p>
+    <p><a href="lessons-learnt.html">Lessons Learnt</a> &bull; <a href="index.html">Back to Gallery</a></p>
+  </div>
+</body>
+</html>

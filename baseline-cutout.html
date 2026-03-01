@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Cutout Bird (Subtractive)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #a8b890;
+      margin-bottom: 1.5rem;
+      font-style: italic;
+      text-align: center;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.18); }
+    button.active { background: rgba(255,200,100,0.25); border-color: rgba(255,200,100,0.5); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1200px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    svg.main-svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .layer-debug {
+      display: none;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 1rem;
+      max-width: 520px;
+    }
+    .layer-debug.visible { display: flex; }
+    .layer-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .layer-item span {
+      font-size: 0.7rem;
+      color: #a0956e;
+    }
+    .layer-item svg {
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .technique-note {
+      max-width: 680px;
+      background: rgba(0,0,0,0.2);
+      border-left: 3px solid rgba(255,200,100,0.4);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: #b8aa90;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb — Cutout Bird</h1>
+  <div class="subtitle">Subtractive technique: layers of color carved by SVG masks</div>
+
+  <div class="technique-note">
+    <strong>How it works:</strong> Each color region is a full-canvas rectangle. SVG <code>&lt;mask&gt;</code> elements carve the shape — white reveals, black hides.
+    Layers stack bottom-up: background → orange body → dark wing+head → blue-gray strip → yellow belly → details.
+    No shape is placed additively on top; every boundary is defined by what the mask removes.
+  </div>
+
+  <div class="controls">
+    <button onclick="toggleDebug()" id="debugBtn">Show Layer Masks</button>
+    <button onclick="flipBoth()">Flip Both (Mirror)</button>
+    <button onclick="location.href='baseline.html'">Compare: Additive</button>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label">Subtractive (Cutout) — SVG Masks</div>
+
+      <!--
+        LAYER MODEL (bottom to top) — all shapes are SVG <mask> carved full-canvas rects:
+        0.  BG rect (#C8DFC8 — soft sage, provides neutral backdrop)
+        1.  Shadow ellipse (direct — semantically background, no mask)
+        2.  Tail (#E06040) — maskTail
+        3.  Orange body (#F09060 gradient) — maskBody
+        4.  Yellow belly (#F4B830 gradient) — maskBelly (subtracts wing)
+        5.  Dark navy wing+head (#1D2B3A) — maskWingHead
+        6.  Blue-gray strip (#90B4BC) — maskStrip
+        7.  Eye white — maskEyeWhite
+        8.  Eye pupil (#1D2B3A) — maskEyePupil
+        9.  Eye glint (white) — maskEyeGlint
+        10. Beak (#F4B830) — maskBeak
+        11. Legs (#1D2B3A) — direct (sub-pixel details)
+
+        All masks: black rect = transparent, white shapes = reveal color rect above.
+      -->
+
+      <svg id="myDrawing" class="main-svg" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+
+          <!-- ===== GRADIENTS ===== -->
+          <linearGradient id="bodyShade" x1="80%" y1="15%" x2="20%" y2="90%">
+            <stop offset="0%" stop-color="#F8A070"/>
+            <stop offset="100%" stop-color="#D86838"/>
+          </linearGradient>
+          <linearGradient id="bellyShade" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#F5A828"/>
+            <stop offset="100%" stop-color="#F4C030"/>
+          </linearGradient>
+          <!-- Soft ground gradient for background -->
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#B8D4C8"/>
+            <stop offset="100%" stop-color="#98C0A8"/>
+          </linearGradient>
+
+          <!--
+            COORDINATE PLAN:
+            Body ellipse: cx=255 cy=300 rx=135 ry=112  (slightly more upright than baseline)
+            Body bottom: y = 300+112 = 412
+            Head circle: cx=360 cy=185 r=68
+            Wing: upper-left of body, covers back + side
+            Legs: y=412 downward, x≈245 and x≈278
+            Shadow: cx=268 cy=445 rx=75 ry=7
+          -->
+
+          <!-- ===== MASK: Body ellipse ===== -->
+          <mask id="maskBody">
+            <rect width="500" height="500" fill="black"/>
+            <ellipse cx="255" cy="300" rx="135" ry="112" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Wing + Head (combined dark navy region) ===== -->
+          <!--
+            Wing: same topology as baseline, adjusted slightly for narrower body.
+            Key points: starts at neck join (310,210), sweeps left over back arc
+            (220,165 → 125,194), down the left side (108,260 → 110,325),
+            along the bottom of wing (160,366 → 218,360), up the breast boundary
+            (252,318 → 258,252), back to neck (310,210).
+          -->
+          <mask id="maskWingHead">
+            <rect width="500" height="500" fill="black"/>
+            <path d="
+              M 312,212
+              Q 282,182 222,166
+              Q 162,154 126,192
+              Q 108,216 108,258
+              L 110,326
+              Q 128,356 162,366
+              Q 192,372 220,362
+              Q 244,350 254,320
+              Q 262,290 260,254
+              Q 258,228 312,212
+              Z" fill="white"/>
+            <circle cx="360" cy="185" r="68" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Blue-gray accent strip (top of wing / back) ===== -->
+          <mask id="maskStrip">
+            <rect width="500" height="500" fill="black"/>
+            <path d="
+              M 312,212
+              Q 282,182 222,166
+              Q 162,154 126,192
+              Q 108,216 110,244
+              Q 138,228 172,216
+              Q 214,204 262,206
+              Q 290,208 312,212
+              Z" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Yellow belly crescent ===== -->
+          <!--
+            Belly ellipse, then subtract wing area so yellow only shows
+            in the visible orange breast region (right/bottom of body).
+          -->
+          <mask id="maskBelly">
+            <rect width="500" height="500" fill="black"/>
+            <!-- Yellow belly area -->
+            <ellipse cx="300" cy="370" rx="100" ry="50" fill="white"/>
+            <!-- Subtract wing so yellow doesn't bleed into dark wing area -->
+            <path d="
+              M 312,212
+              Q 282,182 222,166
+              Q 162,154 126,192
+              Q 108,216 108,258
+              L 110,326
+              Q 128,356 162,366
+              Q 192,372 220,362
+              Q 244,350 254,320
+              Q 262,290 260,254
+              Q 258,228 312,212
+              Z" fill="black"/>
+          </mask>
+
+          <!-- ===== MASK: Tail (elongated wedge pointing lower-left) ===== -->
+          <mask id="maskTail">
+            <rect width="500" height="500" fill="black"/>
+            <!--
+              Tail originates from lower-left of body (~x=148, y=308).
+              Points to lower-left. Wedge shape: narrow at body end, wider at tip.
+            -->
+            <path d="
+              M 148,300
+              Q 100,338 62,374
+              Q 58,392 76,392
+              Q 96,386 110,372
+              Q 140,352 160,336
+              Z" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Eye white circle ===== -->
+          <mask id="maskEyeWhite">
+            <rect width="500" height="500" fill="black"/>
+            <circle cx="378" cy="174" r="14" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Eye pupil ===== -->
+          <mask id="maskEyePupil">
+            <rect width="500" height="500" fill="black"/>
+            <circle cx="380" cy="175" r="6" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Eye glint (tiny highlight) ===== -->
+          <mask id="maskEyeGlint">
+            <rect width="500" height="500" fill="black"/>
+            <circle cx="384" cy="171" r="2.5" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Beak (triangular wedge) ===== -->
+          <mask id="maskBeak">
+            <rect width="500" height="500" fill="black"/>
+            <!-- Beak: triangle pointing right from head -->
+            <path d="M 418,182 L 462,190 L 418,198 Z" fill="white"/>
+          </mask>
+
+          <!-- ===== MASK: Legs ===== -->
+          <!-- Two vertical shins + two horizontal feet -->
+          <mask id="maskLegs">
+            <rect width="500" height="500" fill="black"/>
+            <!-- Left shin -->
+            <rect x="247" y="400" width="9" height="40" rx="4"/>
+            <!-- Left foot -->
+            <rect x="228" y="436" width="34" height="8" rx="3"/>
+            <!-- Right shin -->
+            <rect x="278" y="398" width="9" height="40" rx="4"/>
+            <!-- Right foot -->
+            <rect x="260" y="434" width="34" height="8" rx="3"/>
+          </mask>
+
+        </defs>
+
+        <!-- ===== LAYER 0: Background ===== -->
+        <rect width="500" height="500" fill="url(#bgGrad)"/>
+
+        <!-- ===== GROUND SHADOW — ellipse under the bird ===== -->
+        <ellipse cx="268" cy="447" rx="72" ry="6" fill="#7aaa8a" opacity="0.55"/>
+
+        <!-- ===== TAIL — orange-red rect carved to tail wedge ===== -->
+        <rect width="500" height="500" fill="#E06040" mask="url(#maskTail)"/>
+
+        <!-- ===== BODY — warm orange gradient rect carved to body ellipse ===== -->
+        <rect width="500" height="500" fill="url(#bodyShade)" mask="url(#maskBody)"/>
+
+        <!-- ===== BELLY — golden yellow crescent (wing area subtracted) ===== -->
+        <rect width="500" height="500" fill="url(#bellyShade)" mask="url(#maskBelly)"/>
+
+        <!-- ===== WING + HEAD — dark navy carved to combined wing+head shape ===== -->
+        <rect width="500" height="500" fill="#1D2B3A" mask="url(#maskWingHead)"/>
+
+        <!-- ===== BLUE-GRAY STRIP — accent along top of wing / back ===== -->
+        <rect width="500" height="500" fill="#90B4BC" mask="url(#maskStrip)"/>
+
+        <!-- ===== EYE WHITE ===== -->
+        <rect width="500" height="500" fill="white" mask="url(#maskEyeWhite)"/>
+
+        <!-- ===== EYE PUPIL — navy circle ===== -->
+        <rect width="500" height="500" fill="#1D2B3A" mask="url(#maskEyePupil)"/>
+
+        <!-- ===== EYE GLINT — small white highlight dot ===== -->
+        <rect width="500" height="500" fill="white" mask="url(#maskEyeGlint)"/>
+
+        <!-- ===== BEAK — golden yellow triangle ===== -->
+        <rect width="500" height="500" fill="#F4B830" mask="url(#maskBeak)"/>
+
+        <!-- ===== LEGS — dark navy shins and feet ===== -->
+        <rect width="500" height="500" fill="#1D2B3A" mask="url(#maskLegs)"/>
+
+      </svg>
+
+      <!-- Layer debug panels (shown when "Show Layer Masks" toggled) -->
+      <div class="layer-debug" id="layerDebug">
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <ellipse cx="255" cy="300" rx="135" ry="112" fill="#F09060"/>
+          </svg>
+          <span>Body</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <path d="M 312,212 Q 282,182 222,166 Q 162,154 126,192 Q 108,216 108,258 L 110,326 Q 128,356 162,366 Q 192,372 220,362 Q 244,350 254,320 Q 262,290 260,254 Q 258,228 312,212 Z" fill="#1D2B3A"/>
+            <circle cx="360" cy="185" r="68" fill="#1D2B3A"/>
+          </svg>
+          <span>Wing+Head</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <path d="M 312,212 Q 282,182 222,166 Q 162,154 126,192 Q 108,216 110,244 Q 138,228 172,216 Q 214,204 262,206 Q 290,208 312,212 Z" fill="#90B4BC"/>
+          </svg>
+          <span>Strip</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <ellipse cx="300" cy="370" rx="100" ry="50" fill="#F4C030"/>
+            <path d="M 312,212 Q 282,182 222,166 Q 162,154 126,192 Q 108,216 108,258 L 110,326 Q 128,356 162,366 Q 192,372 220,362 Q 244,350 254,320 Q 262,290 260,254 Q 258,228 312,212 Z" fill="#2a2a2a"/>
+          </svg>
+          <span>Belly</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <path d="M 148,300 Q 100,338 62,374 Q 58,392 76,392 Q 96,386 110,372 Q 140,352 160,336 Z" fill="#E06040"/>
+          </svg>
+          <span>Tail</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#1D2B3A"/>
+            <circle cx="378" cy="174" r="14" fill="white"/>
+            <circle cx="380" cy="175" r="6" fill="#1D2B3A"/>
+            <circle cx="384" cy="171" r="2.5" fill="white"/>
+          </svg>
+          <span>Eye</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <path d="M 418,182 L 462,190 L 418,198 Z" fill="#F4B830"/>
+          </svg>
+          <span>Beak</span>
+        </div>
+
+        <div class="layer-item">
+          <svg width="100" height="100" viewBox="0 0 500 500">
+            <rect width="500" height="500" fill="#2a2a2a"/>
+            <rect x="247" y="400" width="9" height="40" rx="4" fill="#1D2B3A"/>
+            <rect x="228" y="436" width="34" height="8" rx="3" fill="#1D2B3A"/>
+            <rect x="278" y="398" width="9" height="40" rx="4" fill="#1D2B3A"/>
+            <rect x="260" y="434" width="34" height="8" rx="3" fill="#1D2B3A"/>
+          </svg>
+          <span>Legs</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference</div>
+      <img id="referenceImg" src="images/baseline.jpg" alt="Flat geometric bird reference">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    <p>Technique: subtractive SVG masks — each color region is a full rect carved by <code>&lt;mask&gt;</code></p>
+    <p><a href="baseline.html">Additive version</a> &bull; <a href="lessons-learnt.html">Lessons Learnt</a> &bull; <a href="index.html">Gallery</a></p>
+  </div>
+
+  <script>
+    let debugVisible = false;
+    let flipped = false;
+
+    function toggleDebug() {
+      debugVisible = !debugVisible;
+      const panel = document.getElementById('layerDebug');
+      const btn = document.getElementById('debugBtn');
+      if (debugVisible) {
+        panel.classList.add('visible');
+        btn.classList.add('active');
+        btn.textContent = 'Hide Layer Masks';
+      } else {
+        panel.classList.remove('visible');
+        btn.classList.remove('active');
+        btn.textContent = 'Show Layer Masks';
+      }
+    }
+
+    function flipBoth() {
+      flipped = !flipped;
+      const t = flipped ? 'scaleX(-1)' : 'scaleX(1)';
+      document.getElementById('myDrawing').style.transform = t;
+      document.getElementById('referenceImg').style.transform = t;
+    }
+  </script>
+</body>
+</html>

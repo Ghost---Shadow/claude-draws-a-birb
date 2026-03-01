@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Palette Extractor — Claude Draws a Birb</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Courier New', monospace;
+      color: #e0ddd8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      gap: 1.5rem;
+    }
+
+    a.back {
+      color: #90b4bc;
+      text-decoration: none;
+      font-size: 0.85rem;
+      align-self: flex-start;
+    }
+    a.back:hover { text-decoration: underline; }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #e8dcc8;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 0.82rem;
+      color: #7a8fa8;
+      text-align: center;
+      margin-top: -0.75rem;
+    }
+
+    /* ── Drop zone ── */
+    #drop-zone {
+      width: 100%;
+      max-width: 900px;
+      border: 2px dashed #3a5a7a;
+      border-radius: 14px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: rgba(255,255,255,0.03);
+    }
+    #drop-zone.drag-over {
+      border-color: #90b4bc;
+      background: rgba(144,180,188,0.08);
+    }
+    #drop-zone p { color: #7a8fa8; font-size: 0.9rem; line-height: 1.8; }
+    #drop-zone strong { color: #c8d4dc; }
+    #file-input { display: none; }
+    .btn-file {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.4rem;
+      background: #1d4a6e;
+      color: #c8e0f0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .btn-file:hover { background: #265a82; }
+
+    /* ── Main layout ── */
+    #main {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      gap: 1.5rem;
+      flex-direction: column;
+    }
+    #main.visible { display: flex; }
+
+    .row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    /* ── Canvas panel ── */
+    #canvas-panel {
+      position: relative;
+      flex: 0 0 auto;
+    }
+    #canvas-wrap {
+      position: relative;
+      display: inline-block;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+      cursor: crosshair;
+    }
+    #img-canvas { display: block; max-width: 520px; max-height: 520px; }
+    #overlay-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+    }
+
+    /* Region-select rectangle */
+    #region-rect {
+      position: absolute;
+      border: 2px solid #f0c040;
+      background: rgba(240,192,64,0.12);
+      display: none;
+      pointer-events: none;
+    }
+
+    /* Sample crosshair tooltip */
+    #sample-tip {
+      position: absolute;
+      background: rgba(10,10,20,0.88);
+      border: 1px solid #4a7a9a;
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.78rem;
+      color: #e0ddd8;
+      pointer-events: none;
+      display: none;
+      white-space: nowrap;
+    }
+
+    /* ── Controls under canvas ── */
+    #canvas-controls {
+      margin-top: 0.7rem;
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.4rem 0.9rem;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary   { background: #1d6a9e; color: #c8e8ff; }
+    .btn-primary:hover { background: #2078b2; }
+    .btn-secondary { background: #2a3a4a; color: #a0b8c8; }
+    .btn-secondary:hover { background: #344858; }
+    .btn-danger    { background: #6a2a2a; color: #f0c0b8; }
+    .btn-danger:hover  { background: #7e3333; }
+    .btn-active    { background: #4a7a2a !important; color: #c8f0a0 !important; }
+
+    #mode-label {
+      font-size: 0.78rem;
+      color: #5a8aaa;
+      align-self: center;
+    }
+
+    /* ── Right panel ── */
+    #right-panel {
+      flex: 1 1 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* ── Status bar ── */
+    #status-bar {
+      font-size: 0.78rem;
+      color: #6a8a9a;
+      padding: 0.35rem 0;
+    }
+
+    /* ── Palette display ── */
+    #palette-section h2 {
+      font-size: 1rem;
+      color: #c8d4dc;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #k-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+    #k-controls label { font-size: 0.8rem; color: #7a8fa8; }
+    #k-slider {
+      -webkit-appearance: none;
+      width: 100px;
+      height: 4px;
+      background: #2a4a6a;
+      border-radius: 2px;
+      outline: none;
+    }
+    #k-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      background: #90b4bc;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #k-val { font-size: 0.85rem; color: #90b4bc; min-width: 1.5rem; }
+
+    #swatches { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .swatch-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-radius: 8px;
+      padding: 0.35rem 0.5rem;
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .swatch-row:hover { background: rgba(255,255,255,0.09); }
+
+    .swatch-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+
+    .swatch-info { flex: 1; }
+    .swatch-hex {
+      font-size: 0.88rem;
+      color: #e0ddd8;
+      letter-spacing: 0.04em;
+    }
+    .swatch-name {
+      font-size: 0.74rem;
+      color: #7a9aaa;
+      margin-top: 0.1rem;
+    }
+    .swatch-pct {
+      font-size: 0.78rem;
+      color: #6a8a9a;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .swatch-bar-wrap {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 0 0 8px 8px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+    }
+    .swatch-bar {
+      height: 100%;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .copied-toast {
+      position: absolute;
+      top: 50%;
+      right: 0.5rem;
+      transform: translateY(-50%);
+      background: rgba(80,200,100,0.9);
+      color: #082;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      padding: 0.15rem 0.45rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .copied-toast.show { opacity: 1; }
+
+    /* ── Sampled color display ── */
+    #sampled-section {
+      display: none;
+    }
+    #sampled-section.visible { display: block; }
+    #sampled-section h2 {
+      font-size: 1rem;
+      color: #c8d4dc;
+      margin-bottom: 0.5rem;
+    }
+    #sampled-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .sampled-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 0.25rem 0.4rem;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      position: relative;
+    }
+    .sampled-row:hover { background: rgba(255,255,255,0.09); }
+    .sampled-box {
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .sampled-hex { font-size: 0.82rem; color: #d8d0c8; }
+    .sampled-name { font-size: 0.7rem; color: #6a8a9a; margin-left: 0.2rem; }
+
+    /* ── Copy palette section ── */
+    #copy-section h2 {
+      font-size: 1rem;
+      color: #c8d4dc;
+      margin-bottom: 0.5rem;
+    }
+    #palette-output {
+      width: 100%;
+      height: 130px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid #2a4a5a;
+      border-radius: 8px;
+      color: #90d0b0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      padding: 0.6rem 0.8rem;
+      resize: none;
+      outline: none;
+    }
+    #copy-section .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Pixel inspector ── */
+    #inspector {
+      display: none;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #2a4a5a;
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.78rem;
+      color: #90b0c0;
+    }
+    #inspector.visible { display: block; }
+    #inspector-swatch {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* ── Progress bar ── */
+    #progress-wrap {
+      display: none;
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 6px;
+      height: 6px;
+      overflow: hidden;
+    }
+    #progress-wrap.visible { display: block; }
+    #progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #1d6a9e, #90b4bc);
+      border-radius: 6px;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin: 0.25rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <a class="back" href="index.html">&larr; Back to gallery</a>
+  <h1>Color Palette Extractor</h1>
+  <p class="subtitle">Extract dominant colors from any reference image — get exact hex values for SVG drawing</p>
+
+  <!-- Drop zone -->
+  <div id="drop-zone">
+    <p>
+      <strong>Drop an image here</strong><br>
+      or click to browse — PNG, JPG, WebP accepted<br>
+      <em>Canvas stays local; nothing is uploaded</em>
+    </p>
+    <label class="btn-file" for="file-input">Browse image&hellip;</label>
+    <input type="file" id="file-input" accept="image/*">
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-wrap">
+    <div id="progress-bar"></div>
+  </div>
+
+  <!-- Main UI (hidden until image loaded) -->
+  <div id="main">
+
+    <div class="row">
+
+      <!-- Canvas panel -->
+      <div id="canvas-panel">
+        <div id="canvas-wrap">
+          <canvas id="img-canvas"></canvas>
+          <canvas id="overlay-canvas"></canvas>
+          <div id="region-rect"></div>
+          <div id="sample-tip"></div>
+        </div>
+        <div id="canvas-controls">
+          <button class="btn btn-secondary" id="btn-sample" title="Click anywhere on image to read exact pixel color">Click-to-Sample</button>
+          <button class="btn btn-secondary" id="btn-region" title="Drag to select a region, then analyze just those pixels">Region Select</button>
+          <button class="btn btn-danger"    id="btn-clear-region" style="display:none">Clear Region</button>
+          <span id="mode-label">Mode: browse</span>
+        </div>
+        <div id="inspector">
+          <span id="inspector-swatch"></span>
+          <span id="inspector-hex"></span>
+          &nbsp;&mdash;&nbsp;
+          <span id="inspector-name"></span>
+          &nbsp;(r:<span id="inspector-r"></span>
+          g:<span id="inspector-g"></span>
+          b:<span id="inspector-b"></span>)
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div id="right-panel">
+
+        <div id="status-bar">Ready</div>
+
+        <!-- Palette section -->
+        <div id="palette-section">
+          <h2>Dominant Palette <span id="palette-region-label" style="font-size:0.72rem;color:#5a8aaa;"></span></h2>
+          <div id="k-controls">
+            <label for="k-slider">Colors:</label>
+            <input type="range" id="k-slider" min="3" max="12" value="7" step="1">
+            <span id="k-val">7</span>
+            <button class="btn btn-primary" id="btn-reanalyze" style="margin-left:0.4rem;">Re-analyze</button>
+          </div>
+          <div id="swatches"></div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Sampled colors -->
+        <div id="sampled-section">
+          <h2>Sampled Colors <button class="btn btn-danger" id="btn-clear-sampled" style="font-size:0.7rem;padding:0.2rem 0.5rem;margin-left:0.5rem;">Clear</button></h2>
+          <div id="sampled-list"></div>
+          <hr class="section-divider" style="margin-top:0.5rem;">
+        </div>
+
+        <!-- Copy section -->
+        <div id="copy-section">
+          <h2>SVG Snippet</h2>
+          <textarea id="palette-output" readonly spellcheck="false"></textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary"   id="btn-copy-svg">Copy SVG snippet</button>
+            <button class="btn btn-secondary" id="btn-copy-css">Copy CSS vars</button>
+            <button class="btn btn-secondary" id="btn-copy-hex">Copy hex list</button>
+          </div>
+        </div>
+
+      </div><!-- /right-panel -->
+    </div><!-- /row -->
+  </div><!-- /main -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── State ── */
+  let imgEl       = null;   // HTMLImageElement
+  let imgW = 0, imgH = 0;  // native image dimensions
+  let displayW = 0, displayH = 0; // canvas display size
+  let scale = 1;            // displayW / imgW
+
+  let allPixels   = null;   // Uint8ClampedArray from canvas (full image)
+  let paletteColors = [];   // [{r,g,b,pct,name,hex}, …]
+  let sampledColors = [];   // [{r,g,b,hex,name}, …]
+
+  let mode = 'browse';      // 'browse' | 'sample' | 'region'
+  let regionStart  = null;  // {x,y} in canvas coords
+  let regionRect   = null;  // {x,y,w,h} in canvas coords (confirmed)
+  let isDragging   = false;
+
+  /* ── DOM refs ── */
+  const dropZone     = document.getElementById('drop-zone');
+  const fileInput    = document.getElementById('file-input');
+  const mainEl       = document.getElementById('main');
+  const canvasWrap   = document.getElementById('canvas-wrap');
+  const imgCanvas    = document.getElementById('img-canvas');
+  const overlayCanvas= document.getElementById('overlay-canvas');
+  const regionRectEl = document.getElementById('region-rect');
+  const sampleTip    = document.getElementById('sample-tip');
+  const btnSample    = document.getElementById('btn-sample');
+  const btnRegion    = document.getElementById('btn-region');
+  const btnClearReg  = document.getElementById('btn-clear-region');
+  const modeLabel    = document.getElementById('mode-label');
+  const statusBar    = document.getElementById('status-bar');
+  const swatchesEl   = document.getElementById('swatches');
+  const kSlider      = document.getElementById('k-slider');
+  const kVal         = document.getElementById('k-val');
+  const btnReanalyze = document.getElementById('btn-reanalyze');
+  const paletteRegLabel = document.getElementById('palette-region-label');
+  const sampledSection  = document.getElementById('sampled-section');
+  const sampledList     = document.getElementById('sampled-list');
+  const btnClearSampled = document.getElementById('btn-clear-sampled');
+  const paletteOutput   = document.getElementById('palette-output');
+  const btnCopySVG  = document.getElementById('btn-copy-svg');
+  const btnCopyCSS  = document.getElementById('btn-copy-css');
+  const btnCopyHex  = document.getElementById('btn-copy-hex');
+  const progressWrap= document.getElementById('progress-wrap');
+  const progressBar = document.getElementById('progress-bar');
+  const inspector   = document.getElementById('inspector');
+  const inspSwatch  = document.getElementById('inspector-swatch');
+  const inspHex     = document.getElementById('inspector-hex');
+  const inspName    = document.getElementById('inspector-name');
+  const inspR       = document.getElementById('inspector-r');
+  const inspG       = document.getElementById('inspector-g');
+  const inspB       = document.getElementById('inspector-b');
+
+  /* ════════════════════════════════════════
+     FILE LOADING
+  ════════════════════════════════════════ */
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadFile(file);
+  });
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadFile(fileInput.files[0]);
+  });
+
+  function loadFile(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      imgEl = img;
+      imgW  = img.naturalWidth;
+      imgH  = img.naturalHeight;
+
+      // Scale to fit 520×520 display
+      const maxDisplay = 520;
+      scale = Math.min(maxDisplay / imgW, maxDisplay / imgH, 1);
+      displayW = Math.round(imgW * scale);
+      displayH = Math.round(imgH * scale);
+
+      // Draw to canvas
+      imgCanvas.width  = displayW;
+      imgCanvas.height = displayH;
+      overlayCanvas.width  = displayW;
+      overlayCanvas.height = displayH;
+      const ctx = imgCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, displayW, displayH);
+      allPixels = ctx.getImageData(0, 0, displayW, displayH).data;
+
+      // Show main UI
+      dropZone.style.display = 'none';
+      mainEl.classList.add('visible');
+      regionRect = null;
+      regionRectEl.style.display = 'none';
+      btnClearReg.style.display = 'none';
+      setMode('browse');
+      URL.revokeObjectURL(url);
+
+      // Kick off analysis
+      analyzeRegion(null);
+    };
+    img.src = url;
+  }
+
+  /* ════════════════════════════════════════
+     K-MEANS COLOR CLUSTERING
+  ════════════════════════════════════════ */
+
+  // Convert r,g,b → perceptual Lab for better clustering distance
+  function rgbToLab(r, g, b) {
+    // sRGB to linear
+    let R = r / 255, G = g / 255, B = b / 255;
+    R = R > 0.04045 ? Math.pow((R + 0.055) / 1.055, 2.4) : R / 12.92;
+    G = G > 0.04045 ? Math.pow((G + 0.055) / 1.055, 2.4) : G / 12.92;
+    B = B > 0.04045 ? Math.pow((B + 0.055) / 1.055, 2.4) : B / 12.92;
+    // to XYZ (D65)
+    let X = R * 0.4124564 + G * 0.3575761 + B * 0.1804375;
+    let Y = R * 0.2126729 + G * 0.7151522 + B * 0.0721750;
+    let Z = R * 0.0193339 + G * 0.1191920 + B * 0.9503041;
+    X /= 0.95047; Y /= 1.0; Z /= 1.08883;
+    function f(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16/116; }
+    const fx = f(X), fy = f(Y), fz = f(Z);
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  }
+
+  function labDist2(a, b) {
+    const dL = a[0]-b[0], da = a[1]-b[1], db = a[2]-b[2];
+    return dL*dL + da*da + db*db;
+  }
+
+  function toHex(r, g, b) {
+    return '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('').toUpperCase();
+  }
+
+  // Sample pixels from data array (every step-th pixel for speed)
+  function samplePixels(data, step) {
+    const pts = [];
+    for (let i = 0; i < data.length; i += 4 * step) {
+      const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+      if (a < 128) continue; // skip transparent
+      pts.push([r, g, b]);
+    }
+    return pts;
+  }
+
+  function kMeans(pts, k, maxIter = 30) {
+    if (pts.length < k) k = pts.length;
+
+    // Init with k-means++ seeding
+    const centroids = [];
+    centroids.push(pts[Math.floor(Math.random() * pts.length)]);
+    while (centroids.length < k) {
+      const dist = pts.map(p => {
+        let minD = Infinity;
+        for (const c of centroids) {
+          const la = rgbToLab(...p), lb = rgbToLab(...c);
+          const d = labDist2(la, lb);
+          if (d < minD) minD = d;
+        }
+        return minD;
+      });
+      const sum = dist.reduce((a,b) => a+b, 0);
+      let r = Math.random() * sum, cum = 0;
+      for (let i = 0; i < pts.length; i++) {
+        cum += dist[i];
+        if (cum >= r) { centroids.push(pts[i]); break; }
+      }
+    }
+
+    let assignments = new Int32Array(pts.length);
+    let changed = true;
+
+    for (let iter = 0; iter < maxIter && changed; iter++) {
+      changed = false;
+      // Assign
+      const labCentroids = centroids.map(c => rgbToLab(...c));
+      for (let i = 0; i < pts.length; i++) {
+        const lp = rgbToLab(...pts[i]);
+        let best = 0, bestD = Infinity;
+        for (let j = 0; j < k; j++) {
+          const d = labDist2(lp, labCentroids[j]);
+          if (d < bestD) { bestD = d; best = j; }
+        }
+        if (assignments[i] !== best) { assignments[i] = best; changed = true; }
+      }
+      // Update centroids
+      const sums = Array.from({length: k}, () => [0,0,0,0]); // r,g,b,count
+      for (let i = 0; i < pts.length; i++) {
+        const c = assignments[i];
+        sums[c][0] += pts[i][0];
+        sums[c][1] += pts[i][1];
+        sums[c][2] += pts[i][2];
+        sums[c][3]++;
+      }
+      for (let j = 0; j < k; j++) {
+        if (sums[j][3] === 0) {
+          // empty cluster: reinit to random point
+          const rnd = pts[Math.floor(Math.random() * pts.length)];
+          centroids[j] = [...rnd];
+        } else {
+          centroids[j] = [
+            sums[j][0] / sums[j][3],
+            sums[j][1] / sums[j][3],
+            sums[j][2] / sums[j][3]
+          ];
+        }
+      }
+      updateProgress(30 + iter * 2);
+    }
+
+    // Count per cluster
+    const counts = new Int32Array(k);
+    for (let i = 0; i < pts.length; i++) counts[assignments[i]]++;
+    const total = pts.length;
+
+    return centroids.map((c, j) => ({
+      r: Math.round(c[0]),
+      g: Math.round(c[1]),
+      b: Math.round(c[2]),
+      count: counts[j],
+      pct: total > 0 ? (counts[j] / total * 100) : 0
+    })).sort((a,b) => b.pct - a.pct);
+  }
+
+  /* ════════════════════════════════════════
+     COLOR NAMING
+  ════════════════════════════════════════ */
+  function nameColor(r, g, b) {
+    // Simple HSL-based naming
+    const [h, s, l] = rgbToHsl(r, g, b);
+    const lp = l * 100, sp = s * 100;
+
+    if (lp < 8)  return 'black';
+    if (lp > 92) return 'white';
+    if (sp < 10) {
+      if (lp < 30) return 'dark gray';
+      if (lp < 60) return 'gray';
+      return 'light gray';
+    }
+
+    const hue = h * 360;
+    let hueName;
+    if      (hue < 15  || hue >= 345) hueName = 'red';
+    else if (hue < 40)  hueName = 'orange';
+    else if (hue < 65)  hueName = 'yellow';
+    else if (hue < 155) hueName = 'green';
+    else if (hue < 185) hueName = 'cyan';
+    else if (hue < 255) hueName = 'blue';
+    else if (hue < 290) hueName = 'purple';
+    else if (hue < 345) hueName = 'pink';
+    else                hueName = 'red';
+
+    let modifier = '';
+    if      (lp < 25) modifier = 'dark ';
+    else if (lp < 45) modifier = 'deep ';
+    else if (lp > 75) modifier = 'light ';
+    else if (lp > 60) modifier = 'pale ';
+    if      (sp < 30) modifier = 'muted ' + modifier;
+    else if (sp > 80) modifier = 'vivid ' + modifier;
+    else if (sp > 60 && hue >= 15 && hue < 40) modifier = 'warm ' + modifier;
+
+    return (modifier + hueName).trim();
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return [h, s, l];
+  }
+
+  /* ════════════════════════════════════════
+     PROGRESS
+  ════════════════════════════════════════ */
+  function updateProgress(pct) {
+    progressWrap.classList.add('visible');
+    progressBar.style.width = pct + '%';
+  }
+  function hideProgress() {
+    setTimeout(() => {
+      progressWrap.classList.remove('visible');
+      progressBar.style.width = '0%';
+    }, 400);
+  }
+
+  /* ════════════════════════════════════════
+     ANALYZE (with optional region)
+  ════════════════════════════════════════ */
+  function analyzeRegion(rect) {
+    const k = parseInt(kSlider.value);
+    statusBar.textContent = `Analyzing… (k=${k})`;
+    updateProgress(5);
+
+    setTimeout(() => {
+      let data;
+      if (rect) {
+        // Extract pixels from sub-region of the canvas
+        const ctx = imgCanvas.getContext('2d');
+        const rx = Math.max(0, Math.round(rect.x));
+        const ry = Math.max(0, Math.round(rect.y));
+        const rw = Math.min(displayW - rx, Math.round(rect.w));
+        const rh = Math.min(displayH - ry, Math.round(rect.h));
+        if (rw < 2 || rh < 2) { statusBar.textContent = 'Region too small.'; hideProgress(); return; }
+        data = ctx.getImageData(rx, ry, rw, rh).data;
+        paletteRegLabel.textContent = `(region: ${rw}×${rh}px)`;
+      } else {
+        data = allPixels;
+        paletteRegLabel.textContent = `(full image: ${displayW}×${displayH}px)`;
+      }
+
+      updateProgress(15);
+
+      // Sub-sample for speed: aim for ~8000 points
+      const totalPx = data.length / 4;
+      const step = Math.max(1, Math.floor(totalPx / 8000));
+      const pts = samplePixels(data, step);
+      updateProgress(25);
+
+      const clusters = kMeans(pts, k);
+      updateProgress(90);
+
+      paletteColors = clusters.map(c => ({
+        r: c.r, g: c.g, b: c.b,
+        pct: c.pct,
+        hex: toHex(c.r, c.g, c.b),
+        name: nameColor(c.r, c.g, c.b)
+      }));
+
+      renderSwatches();
+      renderOutput();
+      statusBar.textContent = `Done — ${pts.length.toLocaleString()} pixels sampled, step=${step}, k=${k}`;
+      updateProgress(100);
+      hideProgress();
+    }, 20); // yield to browser
+  }
+
+  /* ════════════════════════════════════════
+     RENDER SWATCHES
+  ════════════════════════════════════════ */
+  function renderSwatches() {
+    swatchesEl.innerHTML = '';
+    paletteColors.forEach((c, i) => {
+      const row = document.createElement('div');
+      row.className = 'swatch-row';
+      row.title = `Click to copy ${c.hex}`;
+
+      const box = document.createElement('div');
+      box.className = 'swatch-box';
+      box.style.background = c.hex;
+
+      const info = document.createElement('div');
+      info.className = 'swatch-info';
+      info.innerHTML = `<div class="swatch-hex">${c.hex}</div><div class="swatch-name">${c.name}</div>`;
+
+      const pct = document.createElement('div');
+      pct.className = 'swatch-pct';
+      pct.textContent = c.pct.toFixed(1) + '%';
+
+      // Progress bar strip at bottom
+      const barWrap = document.createElement('div');
+      barWrap.className = 'swatch-bar-wrap';
+      const bar = document.createElement('div');
+      bar.className = 'swatch-bar';
+      bar.style.width = Math.min(100, c.pct * 2) + '%'; // scale for visual
+      bar.style.background = c.hex;
+      barWrap.appendChild(bar);
+
+      // Copy toast
+      const toast = document.createElement('div');
+      toast.className = 'copied-toast';
+      toast.textContent = 'Copied!';
+
+      row.append(box, info, pct, barWrap, toast);
+      swatchesEl.appendChild(row);
+
+      row.addEventListener('click', () => {
+        navigator.clipboard.writeText(c.hex).then(() => {
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 1200);
+        });
+      });
+    });
+  }
+
+  /* ════════════════════════════════════════
+     SVG / CSS / HEX OUTPUT
+  ════════════════════════════════════════ */
+  function buildSVGSnippet(colors) {
+    const lines = ['<!-- Palette extracted from reference -->'];
+    colors.forEach(c => {
+      const pctStr = c.pct.toFixed(1).padStart(5) + '%';
+      const name   = c.name.replace(/\s+/g, '-').padEnd(14);
+      lines.push(`<!-- ${pctStr} ${name} --> "${c.hex}"`);
+    });
+    return lines.join('\n');
+  }
+  function buildCSSVars(colors) {
+    const lines = [':root {'];
+    colors.forEach((c, i) => {
+      const name = c.name.replace(/\s+/g, '-');
+      lines.push(`  --color-${i+1}-${name}: ${c.hex};  /* ${c.pct.toFixed(1)}% */`);
+    });
+    lines.push('}');
+    return lines.join('\n');
+  }
+  function buildHexList(colors) {
+    return colors.map(c => `${c.hex}  /* ${c.pct.toFixed(1)}% ${c.name} */`).join('\n');
+  }
+
+  function renderOutput() {
+    const allColors = [...paletteColors];
+    // Add sampled colors if any (no duplicates)
+    sampledColors.forEach(s => {
+      if (!allColors.find(p => p.hex === s.hex)) allColors.push({...s, pct: 0});
+    });
+    paletteOutput.value = buildSVGSnippet(paletteColors);
+  }
+
+  btnCopySVG.addEventListener('click', () => {
+    paletteOutput.value = buildSVGSnippet(paletteColors);
+    copyTextArea();
+  });
+  btnCopyCSS.addEventListener('click', () => {
+    paletteOutput.value = buildCSSVars(paletteColors);
+    copyTextArea();
+  });
+  btnCopyHex.addEventListener('click', () => {
+    paletteOutput.value = buildHexList(paletteColors);
+    copyTextArea();
+  });
+
+  function copyTextArea() {
+    navigator.clipboard.writeText(paletteOutput.value).then(() => {
+      const orig = btnCopySVG.textContent;
+      btnCopySVG.textContent = 'Copied!';
+      setTimeout(() => { btnCopySVG.textContent = 'Copy SVG snippet'; }, 1400);
+    });
+  }
+
+  /* ════════════════════════════════════════
+     K SLIDER
+  ════════════════════════════════════════ */
+  kSlider.addEventListener('input', () => { kVal.textContent = kSlider.value; });
+  btnReanalyze.addEventListener('click', () => analyzeRegion(regionRect));
+
+  /* ════════════════════════════════════════
+     INTERACTION MODES
+  ════════════════════════════════════════ */
+  function setMode(m) {
+    mode = m;
+    btnSample.classList.toggle('btn-active', m === 'sample');
+    btnRegion.classList.toggle('btn-active', m === 'region');
+    canvasWrap.style.cursor = (m === 'sample') ? 'crosshair' : (m === 'region') ? 'crosshair' : 'default';
+    modeLabel.textContent = 'Mode: ' + m;
+    if (m !== 'sample') { inspector.classList.remove('visible'); sampleTip.style.display = 'none'; }
+  }
+
+  btnSample.addEventListener('click', () => {
+    setMode(mode === 'sample' ? 'browse' : 'sample');
+  });
+  btnRegion.addEventListener('click', () => {
+    setMode(mode === 'region' ? 'browse' : 'region');
+  });
+  btnClearReg.addEventListener('click', () => {
+    regionRect = null;
+    regionRectEl.style.display = 'none';
+    btnClearReg.style.display = 'none';
+    paletteRegLabel.textContent = '';
+    analyzeRegion(null);
+  });
+
+  /* ── Canvas mouse events ── */
+  canvasWrap.addEventListener('mousedown', e => {
+    if (!imgEl) return;
+    const pos = canvasPos(e);
+    if (mode === 'sample') {
+      sampleAt(pos.x, pos.y);
+    } else if (mode === 'region') {
+      isDragging = true;
+      regionStart = pos;
+      regionRectEl.style.display = 'block';
+      regionRectEl.style.left   = pos.x + 'px';
+      regionRectEl.style.top    = pos.y + 'px';
+      regionRectEl.style.width  = '0px';
+      regionRectEl.style.height = '0px';
+    }
+  });
+
+  canvasWrap.addEventListener('mousemove', e => {
+    if (!imgEl) return;
+    const pos = canvasPos(e);
+
+    if (mode === 'sample') {
+      showSampleTip(pos.x, pos.y, e);
+    } else if (mode === 'region' && isDragging) {
+      const x0 = Math.min(regionStart.x, pos.x);
+      const y0 = Math.min(regionStart.y, pos.y);
+      const w  = Math.abs(pos.x - regionStart.x);
+      const h  = Math.abs(pos.y - regionStart.y);
+      regionRectEl.style.left   = x0 + 'px';
+      regionRectEl.style.top    = y0 + 'px';
+      regionRectEl.style.width  = w  + 'px';
+      regionRectEl.style.height = h  + 'px';
+    }
+  });
+
+  canvasWrap.addEventListener('mouseup', e => {
+    if (!imgEl || !isDragging) return;
+    isDragging = false;
+    const pos = canvasPos(e);
+    const x0 = Math.min(regionStart.x, pos.x);
+    const y0 = Math.min(regionStart.y, pos.y);
+    const w  = Math.abs(pos.x - regionStart.x);
+    const h  = Math.abs(pos.y - regionStart.y);
+    if (w < 5 || h < 5) {
+      regionRectEl.style.display = 'none';
+      return;
+    }
+    regionRect = {x: x0, y: y0, w, h};
+    btnClearReg.style.display = '';
+    analyzeRegion(regionRect);
+    setMode('browse');
+  });
+
+  canvasWrap.addEventListener('mouseleave', () => {
+    sampleTip.style.display = 'none';
+    if (isDragging) isDragging = false;
+  });
+
+  /* ── Helpers ── */
+  function canvasPos(e) {
+    const r = imgCanvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  function getPixelAt(cx, cy) {
+    const px = Math.max(0, Math.min(displayW - 1, Math.round(cx)));
+    const py = Math.max(0, Math.min(displayH - 1, Math.round(cy)));
+    const i  = (py * displayW + px) * 4;
+    return { r: allPixels[i], g: allPixels[i+1], b: allPixels[i+2] };
+  }
+
+  function showSampleTip(cx, cy, e) {
+    const { r, g, b } = getPixelAt(cx, cy);
+    const hex = toHex(r, g, b);
+    const name = nameColor(r, g, b);
+    sampleTip.style.display = 'block';
+    sampleTip.style.background = hex;
+    const bright = (r * 0.299 + g * 0.587 + b * 0.114) > 140;
+    sampleTip.style.color = bright ? '#111' : '#eee';
+    sampleTip.style.borderColor = bright ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
+    sampleTip.textContent = hex + ' — ' + name;
+    const tipX = Math.min(cx + 12, displayW - 150);
+    const tipY = Math.max(cy - 30, 4);
+    sampleTip.style.left = tipX + 'px';
+    sampleTip.style.top  = tipY + 'px';
+  }
+
+  function sampleAt(cx, cy) {
+    const { r, g, b } = getPixelAt(cx, cy);
+    const hex  = toHex(r, g, b);
+    const name = nameColor(r, g, b);
+
+    // Show in inspector
+    inspector.classList.add('visible');
+    inspSwatch.style.background = hex;
+    inspHex.textContent = hex;
+    inspName.textContent = name;
+    inspR.textContent = r;
+    inspG.textContent = g;
+    inspB.textContent = b;
+
+    // Add to sampled list if not duplicate
+    if (!sampledColors.find(s => s.hex === hex)) {
+      sampledColors.push({ r, g, b, hex, name });
+      renderSampledList();
+    }
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(hex);
+
+    // Draw crosshair on overlay
+    drawCrosshair(cx, cy, hex);
+  }
+
+  function drawCrosshair(cx, cy, hex) {
+    const ctx = overlayCanvas.getContext('2d');
+    ctx.clearRect(0, 0, displayW, displayH);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, displayH);
+    ctx.moveTo(0, cy); ctx.lineTo(displayW, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = hex;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = hex;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* ════════════════════════════════════════
+     SAMPLED COLORS LIST
+  ════════════════════════════════════════ */
+  function renderSampledList() {
+    sampledSection.classList.toggle('visible', sampledColors.length > 0);
+    sampledList.innerHTML = '';
+    sampledColors.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'sampled-row';
+      row.title = `Click to copy ${s.hex}`;
+      const box = document.createElement('div');
+      box.className = 'sampled-box';
+      box.style.background = s.hex;
+      const hexSpan  = document.createElement('span');
+      hexSpan.className = 'sampled-hex';
+      hexSpan.textContent = s.hex;
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'sampled-name';
+      nameSpan.textContent = s.name;
+
+      const toast = document.createElement('div');
+      toast.className = 'copied-toast';
+      toast.textContent = 'Copied!';
+
+      row.append(box, hexSpan, nameSpan, toast);
+      sampledList.appendChild(row);
+      row.addEventListener('click', () => {
+        navigator.clipboard.writeText(s.hex).then(() => {
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 1200);
+        });
+      });
+    });
+  }
+
+  btnClearSampled.addEventListener('click', () => {
+    sampledColors = [];
+    renderSampledList();
+    const ctx = overlayCanvas.getContext('2d');
+    ctx.clearRect(0, 0, displayW, displayH);
+  });
+</script>
+</body>
+</html>

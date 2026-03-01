@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Single-Path Silhouette Bird</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e8dcc8;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.15); }
+    button.active { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.5); }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+    }
+    .drawing-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .label {
+      font-size: 1rem;
+      font-style: italic;
+      color: #b8aa90;
+      margin-bottom: 1rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      height: auto;
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .footer-link {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb - Silhouette Bird</h1>
+
+  <div class="controls">
+    <button id="silBtn" onclick="toggleSilhouette()">Show Silhouette Only</button>
+    <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <button onclick="location.href='index.html'">Back to Gallery</button>
+  </div>
+
+  <div class="comparison">
+    <div class="drawing-container">
+      <div class="label">My SVG Drawing (Single-Path Silhouette)</div>
+
+      <!--
+        SILHOUETTE PATH DESIGN
+        ======================
+        The bird faces RIGHT. The outer silhouette is the union of:
+          - Head (circle, upper right)
+          - Body (ellipse, lower centre)
+          - Tail (spike extending lower left)
+          - Beak (spike extending right from head)
+
+        Traversal CLOCKWISE from head top:
+
+        Key coordinates:
+          Head:  cx=355, cy=168, r=58
+                 top=(355,110), right=(413,168), bottom=(355,226), left=(297,168)
+          Body:  cx=230, cy=285, rx=150, ry=90
+                 top=(230,195), right=(380,285), bottom=(230,375), left=(80,285)
+          Beak:  upper-base=(410,158), tip=(468,168), lower-base=(410,178)
+          Tail:  body lower-left root: ~(106,340) and ~(148,360)
+                 tail tip: (44,362)
+
+        The outer contour goes:
+        1. HEAD TOP (355,110)
+           → curve right side of head to beak upper base (410,158)
+        2. BEAK: (410,158) → L (468,168) → L (410,178)  [spike in silhouette]
+        3. HEAD LOWER-RIGHT: (410,178) → curve chin to (355,226)
+           ... actually chin is inside the contour where head meets body.
+           The external boundary continues from chin DOWNWARD to where
+           BREAST meets the right side. Actually:
+           After the beak we go down the FRONT of the bird (chest/breast side).
+           The chest is the RIGHT boundary going DOWN.
+           From chin (~355,226) the right side of the silhouette follows
+           the body's right edge: body-right = (380,285).
+        4. BODY RIGHT / BREAST: curve (355,226) → (380,260) → (380,285)
+        5. BODY BOTTOM-RIGHT: (380,285) → (330,360) → (230,375)
+        6. BODY BOTTOM-LEFT up to TAIL ROOT: (230,375) → (148,360)
+        7. TAIL: (148,360) → L (44,362) (tip) → curve back → (106,330)
+        8. BODY LEFT / BACK ARCH: (106,330) → (80,285) → (80,240) → (115,205)
+        9. BACK OF BODY meets BACK OF HEAD: (115,205) → (175,190) → (230,195)
+           Then the body top-right connects to the head:
+           (230,195) → up the back arch toward head:
+           (280,190) → (310,178) → (297,168) ← head left point
+        10. HEAD LEFT (back of head): (297,168) → arc back up to (355,110)
+
+        The tricky part is 8-10: the body's back arch connects smoothly
+        to the back of the head. In the reference, the head is positioned
+        at upper right, and the bird's back is a smooth arc from the tail
+        up to the back of the head.
+
+        SIMPLIFIED VERSION for initial iteration:
+        I'll trace the outer boundary as smooth bezier curves, not worrying
+        about perfect anatomy — just getting a closed shape that looks like
+        the bird outline, then refine.
+      -->
+
+      <svg id="myDrawing" width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bodyShade" x1="75%" y1="15%" x2="25%" y2="85%">
+            <stop offset="0%" stop-color="#F09060"/>
+            <stop offset="100%" stop-color="#D86838"/>
+          </linearGradient>
+          <linearGradient id="bellyShade" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#F5A028"/>
+            <stop offset="100%" stop-color="#F4B830"/>
+          </linearGradient>
+
+          <!--
+            THE ONE SILHOUETTE PATH
+            =======================
+            Starting at head top (355,110), going CLOCKWISE:
+
+            Seg 1: Head top-right arc to beak upper base
+              355,110 → C(385,110  410,132  410,158)
+
+            Seg 2: Beak spike
+              410,158 → L 468,168 → L 410,178
+
+            Seg 3: Head lower-right arc to chin/jaw
+              410,178 → C(413,198  395,222  368,228)
+              [chin area, where head bottom meets neck]
+
+            Seg 4: Neck–chest transition, sweeping down the breast (right side)
+              368,228 → C(365,240  375,260  380,285)
+              [smoothly connecting chin to body right side]
+
+            Seg 5: Body right side down to bottom-right
+              380,285 → C(380,320  360,358  320,372)
+
+            Seg 6: Body bottom across to lower-left / tail root
+              320,372 → C(280,380  200,380  148,362)
+
+            Seg 7: Tail spike
+              148,362 → C(125,355  75,358  44,362)
+              [tail lower edge going out left]
+              44,362 → C(38,354  45,342  68,338)
+              [tail tip — slight round]
+              68,338 → C(90,332  116,332  130,322)
+              [tail upper edge returning]
+
+            Seg 8: Body lower-left to body left (back side going up)
+              130,322 → C(112,310  90,300  80,285)
+
+            Seg 9: Body left / back arch going up
+              80,285 → C(80,240  100,208  138,196)
+
+            Seg 10: Back arch meets back of head — CRITICAL SEAM FIX
+              138,196 → C(180,188  230,188  270,186)
+              [body top, curving toward head area]
+              270,186 → C(295,183  306,172  297,168)
+              [approaching head left side]
+
+            Seg 11: Head back arc (left side) back to head top
+              297,168 → C(297,138  324,110  355,110)
+
+            This is ONE closed path, Z at end.
+          -->
+
+          <clipPath id="birdClip">
+            <path d="
+              M 355,110
+              C 385,110  410,132  410,158
+              L 468,168
+              L 410,178
+              C 413,198  395,222  368,228
+              C 365,240  375,260  380,285
+              C 380,320  360,358  320,372
+              C 280,380  200,380  148,362
+              C 125,355  75,358  44,362
+              C 38,354  45,342  68,338
+              C 90,332  116,332  130,322
+              C 112,310  90,300  80,285
+              C 80,240  100,208  138,196
+              C 180,188  230,188  270,186
+              C 295,183  306,172  297,168
+              C 297,138  324,110  355,110
+              Z
+            "/>
+          </clipPath>
+        </defs>
+
+        <!-- SHADOW -->
+        <ellipse id="shadow" cx="238" cy="445" rx="82" ry="8" fill="#c0c5cc" opacity="0.5"/>
+
+        <!-- LEGS — separate paths (can't be in a single closed silhouette) -->
+        <g id="legs">
+          <rect x="225" y="370" width="12" height="46" rx="5" fill="#1D2B3A"/>
+          <rect x="197" y="410" width="50" height="10" rx="5" fill="#1D2B3A"/>
+          <rect x="260" y="368" width="12" height="46" rx="5" fill="#1D2B3A"/>
+          <rect x="232" y="408" width="50" height="10" rx="5" fill="#1D2B3A"/>
+        </g>
+
+        <!-- ALL COLOUR REGIONS — clipped to the single silhouette -->
+        <g id="colorGroup" clip-path="url(#birdClip)">
+
+          <!-- Base orange fill covers entire interior -->
+          <rect x="0" y="0" width="500" height="500" fill="url(#bodyShade)"/>
+
+          <!-- YELLOW BELLY — lower crescent, drawn before wing so wing overlaps it -->
+          <ellipse cx="224" cy="352" rx="118" ry="60" fill="url(#bellyShade)"/>
+
+          <!-- DARK WING — large navy region covering back/top of body -->
+          <path d="
+            M 315,185
+            C 290,165  252,148  212,140
+            C 172,132  140,138  120,164
+            C 105,184  106,218  108,246
+            L 110,322
+            C 124,350  150,360  180,362
+            C 202,364  222,354  226,336
+            C 230,314  234,290  232,262
+            C 230,240  252,218  315,185 Z"
+              fill="#1D2B3A"/>
+
+          <!-- BLUE-GRAY STRIP — top crescent of wing -->
+          <path d="
+            M 315,185
+            C 290,165  252,148  212,140
+            C 172,132  140,138  120,164
+            C 108,180  108,204  110,222
+            C 132,206  162,192  196,184
+            C 224,176  262,176  292,181
+            C 302,183  310,184  315,185 Z"
+              fill="#90B4BC"/>
+
+          <!-- TAIL — orange-red spike at lower left -->
+          <path d="
+            M 130,322
+            C 108,316  72,334  44,362
+            C 38,354  45,342  68,338
+            C 90,332  116,332  148,340 Z"
+              fill="#E06040"/>
+
+          <!-- HEAD — dark navy cap -->
+          <circle cx="355" cy="168" r="62" fill="#1D2B3A"/>
+
+          <!-- EYE WHITE -->
+          <circle cx="372" cy="155" r="14" fill="white"/>
+          <!-- EYE PUPIL -->
+          <circle cx="374" cy="156" r="5.5" fill="#1D2B3A"/>
+
+          <!-- BEAK — inside clip path so clipped correctly -->
+          <path d="M 410,158 L 468,168 L 410,178 Z" fill="#1D2B3A"/>
+
+        </g>
+
+        <!-- SILHOUETTE OUTLINE — same path, shown on toggle for shape inspection -->
+        <path id="silhouette"
+          fill="rgba(255,255,255,0.07)"
+          stroke="#ffffffcc"
+          stroke-width="2"
+          opacity="0"
+          d="
+            M 355,110
+            C 385,110  410,132  410,158
+            L 468,168
+            L 410,178
+            C 413,198  395,222  368,228
+            C 365,240  375,260  380,285
+            C 380,320  360,358  320,372
+            C 280,380  200,380  148,362
+            C 125,355  75,358  44,362
+            C 38,354  45,342  68,338
+            C 90,332  116,332  130,322
+            C 112,310  90,300  80,285
+            C 80,240  100,208  138,196
+            C 180,188  230,188  270,186
+            C 295,183  306,172  297,168
+            C 297,138  324,110  355,110
+            Z
+          "
+        />
+
+      </svg>
+    </div>
+
+    <div class="drawing-container">
+      <div class="label">Reference</div>
+      <img id="referenceImg" src="images/baseline.jpg" alt="Flat geometric bird reference">
+    </div>
+  </div>
+
+  <div class="footer-link">
+    <p>Reference: <a href="https://www.vecteezy.com/vector-art/25792305-cute-simple-bird-flat-vector" target="_blank" rel="noopener">"Cute Simple Bird Flat Vector"</a> on Vecteezy (Free License)</p>
+    <p><a href="images/ATTRIBUTION.md">View full image credits</a> &bull;
+       <a href="baseline.html">Flat version</a> &bull;
+       <a href="baseline-bezier.html">Bezier version</a> &bull;
+       <a href="lessons-learnt.html">Lessons Learnt</a></p>
+  </div>
+
+  <script>
+    let flipped = false;
+    let silhouetteOnly = false;
+
+    function flipBoth() {
+      flipped = !flipped;
+      const t = flipped ? 'scaleX(-1)' : 'scaleX(1)';
+      document.getElementById('myDrawing').style.transform = t;
+      document.getElementById('referenceImg').style.transform = t;
+    }
+
+    function toggleSilhouette() {
+      silhouetteOnly = !silhouetteOnly;
+      const btn = document.getElementById('silBtn');
+      const cg = document.getElementById('colorGroup');
+      const sil = document.getElementById('silhouette');
+      const legs = document.getElementById('legs');
+      const shadow = document.getElementById('shadow');
+
+      if (silhouetteOnly) {
+        btn.classList.add('active');
+        btn.textContent = 'Show Full Colour';
+        cg.style.display = 'none';
+        legs.style.display = 'none';
+        shadow.style.display = 'none';
+        sil.style.opacity = '1';
+      } else {
+        btn.classList.remove('active');
+        btn.textContent = 'Show Silhouette Only';
+        cg.style.display = '';
+        legs.style.display = '';
+        shadow.style.display = '';
+        sil.style.opacity = '0';
+      }
+    }
+  </script>
+</body>
+</html>

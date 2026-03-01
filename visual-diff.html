@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Diff Tool — Claude Draws a Birb</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a2a3a 0%, #0d1f2d 50%, #0a1520 100%);
+      font-family: Georgia, serif;
+      color: #e0d8c8;
+    }
+
+    header {
+      background: rgba(0,0,0,0.4);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      color: #e8dcc8;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+    }
+
+    a.back {
+      color: #9ab8c8;
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+    a.back:hover { text-decoration: underline; }
+
+    /* ── Controls bar ────────────────────────────── */
+    .controls-bar {
+      background: rgba(0,0,0,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 140px;
+    }
+
+    .control-group label {
+      font-size: 0.72rem;
+      color: #8a9aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    select, input[type="file"] {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: #e0d8c8;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    select:focus, input[type="file"]:focus { outline: 2px solid #4a9aba; }
+    select option { background: #1a2a3a; }
+
+    input[type="file"] { padding: 0.25rem 0.5rem; }
+
+    .mode-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: #ccc;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-family: inherit;
+    }
+    .mode-btn.active {
+      background: #4a9aba;
+      border-color: #5ab8d8;
+      color: #fff;
+    }
+    .mode-btn:hover:not(.active) { background: rgba(255,255,255,0.12); }
+
+    .mode-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: 160px;
+    }
+    .slider-group label {
+      font-size: 0.72rem;
+      color: #8a9aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      justify-content: space-between;
+    }
+    .slider-group label span { color: #ccd; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #4a9aba;
+    }
+
+    .run-btn {
+      background: #2a7a5a;
+      border: 1px solid #3a9a6a;
+      border-radius: 6px;
+      color: #e0f0e8;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .run-btn:hover { background: #3a9a6a; }
+    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Score bar ───────────────────────────────── */
+    .score-bar {
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+      min-height: 42px;
+    }
+
+    .score-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .score-label {
+      font-size: 0.65rem;
+      color: #7a8a9a;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .score-value {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: #e0d8c8;
+      font-family: monospace;
+    }
+    .score-value.good { color: #6ada90; }
+    .score-value.ok   { color: #dada60; }
+    .score-value.poor { color: #da6060; }
+
+    .score-bar .region-info {
+      font-size: 0.82rem;
+      color: #9ab8c8;
+      font-style: italic;
+      margin-left: auto;
+    }
+
+    /* ── Main canvas area ───────────────────────── */
+    .canvas-area {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      padding: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .canvas-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .canvas-panel .panel-label {
+      font-size: 0.78rem;
+      color: #7a9aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    canvas {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: #111;
+      display: block;
+      /* cursor changes with mode */
+    }
+
+    canvas.region-mode { cursor: crosshair; }
+
+    /* ── Comparison mode second drawing ─────────── */
+    .comparison-input {
+      display: none;
+      background: rgba(0,0,0,0.25);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 0.75rem 1.5rem;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .comparison-input.visible { display: flex; }
+    .comparison-input label {
+      font-size: 0.82rem;
+      color: #9abaaa;
+    }
+
+    /* ── Legend for heatmap ─────────────────────── */
+    .heatmap-legend {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.5rem 0;
+      font-size: 0.75rem;
+      color: #8a9aaa;
+    }
+    .heatmap-legend.visible { display: flex; }
+    .legend-gradient {
+      width: 120px;
+      height: 10px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #00c850, #c8c800, #c80000);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* ── Status / instructions ──────────────────── */
+    .status {
+      text-align: center;
+      color: #6a8a9a;
+      font-size: 0.88rem;
+      padding: 3rem 1rem;
+      font-style: italic;
+    }
+
+    /* ── Tooltip ────────────────────────────────── */
+    #tooltip {
+      position: fixed;
+      background: rgba(0,0,0,0.85);
+      color: #e0d8c8;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.78rem;
+      pointer-events: none;
+      display: none;
+      z-index: 1000;
+      white-space: nowrap;
+      font-family: monospace;
+    }
+
+    /* ── Error box ──────────────────────────────── */
+    .error-box {
+      background: rgba(200,60,60,0.2);
+      border: 1px solid rgba(200,60,60,0.4);
+      border-radius: 6px;
+      color: #f0a0a0;
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      margin: 0.5rem 1.5rem;
+      display: none;
+    }
+    .error-box.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Visual Diff Tool</h1>
+  <span style="font-size:0.85rem;color:#7a9aaa;">Compare SVG drawings against the reference photo</span>
+  <a class="back" href="index.html">&larr; Back to gallery</a>
+</header>
+
+<!-- ── Controls bar ──────────────────────────────────── -->
+<div class="controls-bar">
+
+  <div class="control-group">
+    <label>Reference Image</label>
+    <select id="refSelect">
+      <option value="images/baseline.jpg">baseline.jpg (robin reference)</option>
+      <option value="images/robin.jpg">robin.jpg</option>
+      <option value="custom">Custom file…</option>
+    </select>
+  </div>
+
+  <div class="control-group" id="refFileGroup" style="display:none">
+    <label>Reference File</label>
+    <input type="file" id="refFile" accept="image/*">
+  </div>
+
+  <div class="control-group">
+    <label>Drawing (SVG / HTML)</label>
+    <select id="svgSelect">
+      <option value="">— pick a drawing —</option>
+      <option value="baseline-bezier-outline-scanned.html">Scanner Bezier Outline</option>
+      <option value="baseline-bezier-outline.html">Bezier Outline Bird</option>
+      <option value="baseline-triangle.html">Triangle Bird</option>
+      <option value="baseline-bezier.html">Bezier Bird</option>
+      <option value="baseline.html">Baseline Bird</option>
+      <option value="custom">Custom file…</option>
+    </select>
+  </div>
+
+  <div class="control-group" id="svgFileGroup" style="display:none">
+    <label>Drawing File</label>
+    <input type="file" id="svgFile" accept=".html,.svg,.htm">
+  </div>
+
+  <div class="control-group">
+    <label>View Mode</label>
+    <div class="mode-buttons">
+      <button class="mode-btn active" data-mode="sidebyside">Side-by-side</button>
+      <button class="mode-btn" data-mode="overlay">Overlay</button>
+      <button class="mode-btn" data-mode="diff">Diff Heat Map</button>
+      <button class="mode-btn" data-mode="compare">Compare Two</button>
+    </div>
+  </div>
+
+  <div class="slider-group" id="opacityGroup" style="display:none">
+    <label>Overlay Opacity <span id="opacityVal">50%</span></label>
+    <input type="range" id="opacitySlider" min="0" max="100" value="50">
+  </div>
+
+  <div class="slider-group" id="thresholdGroup">
+    <label>Match Threshold <span id="thresholdVal">30</span></label>
+    <input type="range" id="thresholdSlider" min="5" max="100" value="30">
+  </div>
+
+  <button class="run-btn" id="runBtn">Render &amp; Diff</button>
+
+</div>
+
+<!-- ── Comparison second drawing ─────────────────────── -->
+<div class="comparison-input" id="comparePanel">
+  <label>Second Drawing:</label>
+  <select id="svgSelect2">
+    <option value="">— pick second drawing —</option>
+    <option value="baseline-bezier-outline-scanned.html">Scanner Bezier Outline</option>
+    <option value="baseline-bezier-outline.html">Bezier Outline Bird</option>
+    <option value="baseline-triangle.html">Triangle Bird</option>
+    <option value="baseline-bezier.html">Bezier Bird</option>
+    <option value="baseline.html">Baseline Bird</option>
+    <option value="custom2">Custom file…</option>
+  </select>
+  <div id="svgFile2Group" style="display:none">
+    <input type="file" id="svgFile2" accept=".html,.svg,.htm">
+  </div>
+</div>
+
+<!-- ── Heatmap legend ────────────────────────────────── -->
+<div class="heatmap-legend" id="heatmapLegend">
+  <span>Match</span>
+  <div class="legend-gradient"></div>
+  <span>Diverge</span>
+  <span style="margin-left:1rem;color:#6a8a9a;font-size:0.7rem;">(deltaE per pixel, threshold marked by yellow)</span>
+</div>
+
+<!-- ── Score bar ─────────────────────────────────────── -->
+<div class="score-bar" id="scoreBar">
+  <div class="score-item">
+    <span class="score-label">Mean Error (RGB)</span>
+    <span class="score-value" id="scoreMean">—</span>
+  </div>
+  <div class="score-item">
+    <span class="score-label">Pixels Within Threshold</span>
+    <span class="score-value" id="scorePct">—</span>
+  </div>
+  <div class="score-item">
+    <span class="score-label">Max Error</span>
+    <span class="score-value" id="scoreMax">—</span>
+  </div>
+  <div class="score-item" id="compareScore2Wrap" style="display:none">
+    <span class="score-label">Drawing 2 — Mean Error</span>
+    <span class="score-value" id="scoreMean2">—</span>
+  </div>
+  <div class="score-item" id="compareScore2PctWrap" style="display:none">
+    <span class="score-label">Drawing 2 — Within Threshold</span>
+    <span class="score-value" id="scorePct2">—</span>
+  </div>
+  <div class="region-info" id="regionInfo"></div>
+</div>
+
+<div class="error-box" id="errorBox"></div>
+
+<!-- ── Canvas area ───────────────────────────────────── -->
+<div class="canvas-area" id="canvasArea">
+  <div class="status" id="statusMsg">
+    Select a reference image and a drawing, then click <strong>Render &amp; Diff</strong>.
+  </div>
+</div>
+
+<!-- ── Tooltip ───────────────────────────────────────── -->
+<div id="tooltip"></div>
+
+<!-- ── Hidden iframe for rendering HTML drawings ─────── -->
+<iframe id="renderFrame" style="position:fixed;left:-9999px;top:-9999px;width:600px;height:600px;border:none;visibility:hidden;" sandbox="allow-scripts allow-same-origin"></iframe>
+
+<script>
+'use strict';
+
+// ── Constants ──────────────────────────────────────────
+const CANVAS_SIZE = 500; // render everything at 500×500
+
+// ── State ──────────────────────────────────────────────
+let currentMode = 'sidebyside';
+let refImageData = null;   // ImageData for reference at CANVAS_SIZE
+let svgImageData = null;   // ImageData for drawing 1
+let svgImageData2 = null;  // ImageData for drawing 2 (compare mode)
+let diffImageData = null;  // computed diff map
+let diffImageData2 = null;
+
+// Region selection state
+let isSelecting = false;
+let selStart = null;
+let selEnd = null;
+let regionCanvas = null;   // the canvas that has region overlay
+
+// ── DOM refs ───────────────────────────────────────────
+const refSelect      = document.getElementById('refSelect');
+const refFileGroup   = document.getElementById('refFileGroup');
+const refFileInput   = document.getElementById('refFile');
+const svgSelect      = document.getElementById('svgSelect');
+const svgFileGroup   = document.getElementById('svgFileGroup');
+const svgFileInput   = document.getElementById('svgFile');
+const svgSelect2     = document.getElementById('svgSelect2');
+const svgFile2Group  = document.getElementById('svgFile2Group');
+const svgFile2Input  = document.getElementById('svgFile2');
+const comparePanel   = document.getElementById('comparePanel');
+const opacityGroup   = document.getElementById('opacityGroup');
+const opacitySlider  = document.getElementById('opacitySlider');
+const opacityVal     = document.getElementById('opacityVal');
+const thresholdGroup = document.getElementById('thresholdGroup');
+const thresholdSlider= document.getElementById('thresholdSlider');
+const thresholdVal   = document.getElementById('thresholdVal');
+const runBtn         = document.getElementById('runBtn');
+const canvasArea     = document.getElementById('canvasArea');
+const statusMsg      = document.getElementById('statusMsg');
+const scoreBar       = document.getElementById('scoreBar');
+const scoreMean      = document.getElementById('scoreMean');
+const scorePct       = document.getElementById('scorePct');
+const scoreMax       = document.getElementById('scoreMax');
+const scoreMean2     = document.getElementById('scoreMean2');
+const scorePct2      = document.getElementById('scorePct2');
+const compareScore2Wrap    = document.getElementById('compareScore2Wrap');
+const compareScore2PctWrap = document.getElementById('compareScore2PctWrap');
+const regionInfo     = document.getElementById('regionInfo');
+const heatmapLegend  = document.getElementById('heatmapLegend');
+const tooltip        = document.getElementById('tooltip');
+const errorBox       = document.getElementById('errorBox');
+const renderFrame    = document.getElementById('renderFrame');
+
+// ── Utility helpers ────────────────────────────────────
+
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.classList.add('visible');
+}
+function clearError() {
+  errorBox.classList.remove('visible');
+}
+
+function scoreClass(meanErr) {
+  if (meanErr < 25)  return 'good';
+  if (meanErr < 60)  return 'ok';
+  return 'poor';
+}
+
+function makeCanvas(id, label, size) {
+  const panel = document.createElement('div');
+  panel.className = 'canvas-panel';
+  const lbl = document.createElement('div');
+  lbl.className = 'panel-label';
+  lbl.textContent = label;
+  const c = document.createElement('canvas');
+  c.id = id;
+  c.width = size;
+  c.height = size;
+  c.style.width  = Math.min(size, 460) + 'px';
+  c.style.height = Math.min(size, 460) + 'px';
+  panel.appendChild(lbl);
+  panel.appendChild(c);
+  return { panel, canvas: c };
+}
+
+// ── Load reference image into ImageData ────────────────
+
+function loadRefImageData(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = CANVAS_SIZE;
+      c.height = CANVAS_SIZE;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      resolve(ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE));
+    };
+    img.onerror = () => reject(new Error('Failed to load reference image: ' + src));
+    img.src = src;
+  });
+}
+
+// ── Load SVG/HTML drawing into ImageData ───────────────
+// Uses a hidden iframe; waits for load then html2canvas-like approach via canvas.
+// For SVG files we use an <img> with blob URL.
+// For HTML files we use iframe + html2canvas via OffscreenCanvas / drawImage trick.
+
+function loadDrawingImageData(src, fileBlob) {
+  return new Promise((resolve, reject) => {
+    if (fileBlob) {
+      // Custom file — check type
+      const mime = fileBlob.type;
+      if (mime === 'image/svg+xml' || fileBlob.name?.endsWith('.svg')) {
+        // SVG file: render via <img>
+        const url = URL.createObjectURL(fileBlob);
+        renderSvgBlobToImageData(url, resolve, reject);
+      } else {
+        // HTML file: render via iframe
+        const url = URL.createObjectURL(fileBlob);
+        renderHtmlUrlToImageData(url, resolve, reject, true);
+      }
+      return;
+    }
+
+    if (src.endsWith('.svg')) {
+      renderSvgBlobToImageData(src, resolve, reject);
+    } else {
+      // HTML page — use iframe approach
+      renderHtmlUrlToImageData(src, resolve, reject, false);
+    }
+  });
+}
+
+function renderSvgBlobToImageData(url, resolve, reject) {
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = CANVAS_SIZE;
+    c.height = CANVAS_SIZE;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    URL.revokeObjectURL && URL.revokeObjectURL(url);
+    resolve(ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE));
+  };
+  img.onerror = () => reject(new Error('Failed to render SVG'));
+  img.src = url;
+}
+
+function renderHtmlUrlToImageData(url, resolve, reject, isBlob) {
+  // The iframe renders the HTML page.  We then use html2canvas-lite (our own):
+  // we snapshot via drawWindow (Firefox only) or the modern approach of
+  // rendering the SVG element inside the page.
+  //
+  // Strategy: load the page in the iframe, extract the first <svg> element
+  // as an SVG blob, then render that SVG to a canvas.
+
+  const frame = renderFrame;
+  const timer = setTimeout(() => {
+    reject(new Error('Timeout rendering page. Try the SVG file directly.'));
+  }, 15000);
+
+  function onLoad() {
+    clearTimeout(timer);
+    frame.removeEventListener('load', onLoad);
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) { reject(new Error('Cannot access iframe document (cross-origin?)')); return; }
+
+      // Find the first SVG element in the iframe
+      const svgEl = doc.querySelector('svg');
+      if (!svgEl) { reject(new Error('No <svg> element found in the drawing page.')); return; }
+
+      // Clone and serialize the SVG
+      const clone = svgEl.cloneNode(true);
+
+      // Ensure viewBox is set
+      if (!clone.hasAttribute('viewBox')) {
+        const w = clone.getAttribute('width') || CANVAS_SIZE;
+        const h = clone.getAttribute('height') || CANVAS_SIZE;
+        clone.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      }
+      clone.setAttribute('width', CANVAS_SIZE);
+      clone.setAttribute('height', CANVAS_SIZE);
+
+      // Inline any <image> hrefs relative to the iframe's base
+      const iframeBase = frame.contentWindow.location.href.replace(/[^/]*$/, '');
+      clone.querySelectorAll('image').forEach(imgEl => {
+        ['href','xlink:href'].forEach(attr => {
+          let v = imgEl.getAttribute(attr);
+          if (v && !v.startsWith('data:') && !v.startsWith('http')) {
+            imgEl.setAttribute(attr, iframeBase + v);
+          }
+        });
+      });
+
+      const svgStr = new XMLSerializer().serializeToString(clone);
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      renderSvgBlobToImageData(blobUrl, resolve, reject);
+      if (isBlob) URL.revokeObjectURL(url);
+    } catch(e) {
+      reject(e);
+    }
+  }
+
+  frame.addEventListener('load', onLoad);
+  frame.src = url;
+}
+
+// ── Diff computation ───────────────────────────────────
+
+function computeDiff(refData, svgData, threshold) {
+  const w = CANVAS_SIZE, h = CANVAS_SIZE;
+  const n = w * h;
+  const heatData = new Uint8ClampedArray(n * 4);
+  let totalError = 0;
+  let maxError = 0;
+  let withinThresh = 0;
+
+  // threshold in RGB Euclidean distance (max possible = sqrt(3)*255 ≈ 441)
+  // Normalise threshold: user sets 0-100, map to 0-441
+  const thresh = threshold / 100 * 441;
+
+  for (let i = 0; i < n; i++) {
+    const p = i * 4;
+    const dr = refData.data[p]   - svgData.data[p];
+    const dg = refData.data[p+1] - svgData.data[p+1];
+    const db = refData.data[p+2] - svgData.data[p+2];
+    const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+    totalError += dist;
+    if (dist > maxError) maxError = dist;
+    if (dist <= thresh) withinThresh++;
+
+    // Heat map: green (close) → yellow → red (far)
+    // normalise dist to 0–1 over range 0–441
+    const t = Math.min(dist / 441, 1);
+    // t=0 → green (0,200,80), t=0.5 → yellow (200,200,0), t=1 → red (200,0,0)
+    let r, g, b;
+    if (t < 0.5) {
+      const s = t * 2;
+      r = Math.round(s * 220);
+      g = Math.round(200 - s * 10);
+      b = Math.round(80 - s * 80);
+    } else {
+      const s = (t - 0.5) * 2;
+      r = 220;
+      g = Math.round(190 - s * 190);
+      b = 0;
+    }
+    heatData[p]   = r;
+    heatData[p+1] = g;
+    heatData[p+2] = b;
+    heatData[p+3] = 220;
+  }
+
+  const meanError = totalError / n;
+  const pctWithin = (withinThresh / n * 100);
+
+  return {
+    imageData: new ImageData(heatData, w, h),
+    meanError,
+    maxError,
+    pctWithin
+  };
+}
+
+// Compute diff for a rectangular region (in canvas pixels)
+function computeRegionDiff(refData, svgData, threshold, x0, y0, x1, y1) {
+  const w = CANVAS_SIZE;
+  const rx0 = Math.max(0, Math.min(x0, x1));
+  const ry0 = Math.max(0, Math.min(y0, y1));
+  const rx1 = Math.min(w, Math.max(x0, x1));
+  const ry1 = Math.min(w, Math.max(y0, y1));
+
+  const thresh = threshold / 100 * 441;
+  let totalError = 0, n = 0, maxErr = 0, within = 0;
+
+  for (let y = ry0; y < ry1; y++) {
+    for (let x = rx0; x < rx1; x++) {
+      const p = (y * w + x) * 4;
+      const dr = refData.data[p]   - svgData.data[p];
+      const dg = refData.data[p+1] - svgData.data[p+1];
+      const db = refData.data[p+2] - svgData.data[p+2];
+      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      totalError += dist;
+      if (dist > maxErr) maxErr = dist;
+      if (dist <= thresh) within++;
+      n++;
+    }
+  }
+  if (n === 0) return null;
+  return {
+    meanError: totalError / n,
+    pctWithin: within / n * 100,
+    maxError: maxErr,
+    pixelCount: n
+  };
+}
+
+// ── Render functions ───────────────────────────────────
+
+function renderSideBySide() {
+  canvasArea.innerHTML = '';
+  const { panel: p1, canvas: c1 } = makeCanvas('canRef', 'Reference', CANVAS_SIZE);
+  const { panel: p2, canvas: c2 } = makeCanvas('canSvg', 'Drawing', CANVAS_SIZE);
+  canvasArea.appendChild(p1);
+  canvasArea.appendChild(p2);
+
+  const ctx1 = c1.getContext('2d');
+  const ctx2 = c2.getContext('2d');
+  ctx1.putImageData(refImageData, 0, 0);
+  ctx2.putImageData(svgImageData, 0, 0);
+
+  // Add region selection to drawing canvas
+  setupRegionSelection(c2, svgImageData);
+}
+
+function renderOverlay() {
+  canvasArea.innerHTML = '';
+  const { panel, canvas } = makeCanvas('canOverlay', 'Overlay (drawing on reference)', CANVAS_SIZE);
+  canvasArea.appendChild(panel);
+  const ctx = canvas.getContext('2d');
+  drawOverlay(ctx, parseFloat(opacitySlider.value) / 100);
+
+  opacitySlider.oninput = () => {
+    opacityVal.textContent = opacitySlider.value + '%';
+    drawOverlay(ctx, parseFloat(opacitySlider.value) / 100);
+  };
+}
+
+function drawOverlay(ctx, alpha) {
+  ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  ctx.putImageData(refImageData, 0, 0);
+  // Draw SVG on top with given opacity
+  // We need to composite at pixel level for proper alpha
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = CANVAS_SIZE;
+  tempCanvas.height = CANVAS_SIZE;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.putImageData(svgImageData, 0, 0);
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(tempCanvas, 0, 0);
+  ctx.globalAlpha = 1;
+}
+
+function renderDiff() {
+  const threshold = parseFloat(thresholdSlider.value);
+  const result = computeDiff(refImageData, svgImageData, threshold);
+  diffImageData = result;
+
+  canvasArea.innerHTML = '';
+  const { panel: p1, canvas: c1 } = makeCanvas('canRef2', 'Reference', CANVAS_SIZE);
+  const { panel: p2, canvas: c2 } = makeCanvas('canDiff', 'Diff Heat Map', CANVAS_SIZE);
+  canvasArea.appendChild(p1);
+  canvasArea.appendChild(p2);
+
+  c1.getContext('2d').putImageData(refImageData, 0, 0);
+  c2.getContext('2d').putImageData(result.imageData, 0, 0);
+
+  updateScores(result.meanError, result.pctWithin, result.maxError);
+
+  // Region selection on diff canvas
+  setupRegionSelection(c2, svgImageData, true);
+
+  thresholdSlider.oninput = () => {
+    thresholdVal.textContent = thresholdSlider.value;
+    const r2 = computeDiff(refImageData, svgImageData, parseFloat(thresholdSlider.value));
+    diffImageData = r2;
+    c2.getContext('2d').putImageData(r2.imageData, 0, 0);
+    updateScores(r2.meanError, r2.pctWithin, r2.maxError);
+  };
+}
+
+function renderCompare() {
+  if (!svgImageData2) {
+    canvasArea.innerHTML = '<div class="status">Select a second drawing above and click <strong>Render &amp; Diff</strong>.</div>';
+    return;
+  }
+
+  const threshold = parseFloat(thresholdSlider.value);
+  const r1 = computeDiff(refImageData, svgImageData, threshold);
+  const r2 = computeDiff(refImageData, svgImageData2, threshold);
+  diffImageData = r1;
+  diffImageData2 = r2;
+
+  canvasArea.innerHTML = '';
+
+  // Drawing 1 side
+  const { panel: pRef, canvas: cRef } = makeCanvas('canCmpRef', 'Reference', CANVAS_SIZE);
+  const { panel: pD1,  canvas: cD1  } = makeCanvas('canCmpD1',  'Drawing 1', CANVAS_SIZE);
+  const { panel: pHm1, canvas: cHm1 } = makeCanvas('canCmpH1',  'Drawing 1 — Heat Map', CANVAS_SIZE);
+  const { panel: pD2,  canvas: cD2  } = makeCanvas('canCmpD2',  'Drawing 2', CANVAS_SIZE);
+  const { panel: pHm2, canvas: cHm2 } = makeCanvas('canCmpH2',  'Drawing 2 — Heat Map', CANVAS_SIZE);
+
+  canvasArea.appendChild(pRef);
+  canvasArea.appendChild(pD1);
+  canvasArea.appendChild(pHm1);
+  canvasArea.appendChild(pD2);
+  canvasArea.appendChild(pHm2);
+
+  cRef.getContext('2d').putImageData(refImageData, 0, 0);
+  cD1.getContext('2d').putImageData(svgImageData, 0, 0);
+  cHm1.getContext('2d').putImageData(r1.imageData, 0, 0);
+  cD2.getContext('2d').putImageData(svgImageData2, 0, 0);
+  cHm2.getContext('2d').putImageData(r2.imageData, 0, 0);
+
+  updateScores(r1.meanError, r1.pctWithin, r1.maxError, r2.meanError, r2.pctWithin);
+
+  thresholdSlider.oninput = () => {
+    thresholdVal.textContent = thresholdSlider.value;
+    const nr1 = computeDiff(refImageData, svgImageData,  parseFloat(thresholdSlider.value));
+    const nr2 = computeDiff(refImageData, svgImageData2, parseFloat(thresholdSlider.value));
+    diffImageData  = nr1;
+    diffImageData2 = nr2;
+    cHm1.getContext('2d').putImageData(nr1.imageData, 0, 0);
+    cHm2.getContext('2d').putImageData(nr2.imageData, 0, 0);
+    updateScores(nr1.meanError, nr1.pctWithin, nr1.maxError, nr2.meanError, nr2.pctWithin);
+  };
+}
+
+function updateScores(mean1, pct1, max1, mean2, pct2) {
+  scoreMean.textContent = mean1.toFixed(1);
+  scoreMean.className   = 'score-value ' + scoreClass(mean1);
+  scorePct.textContent  = pct1.toFixed(1) + '%';
+  scorePct.className    = 'score-value ' + scoreClass(100 - pct1);  // more pixels in = better
+  scoreMax.textContent  = max1.toFixed(0);
+
+  if (mean2 !== undefined) {
+    compareScore2Wrap.style.display    = '';
+    compareScore2PctWrap.style.display = '';
+    scoreMean2.textContent = mean2.toFixed(1);
+    scoreMean2.className   = 'score-value ' + scoreClass(mean2);
+    scorePct2.textContent  = pct2.toFixed(1) + '%';
+    scorePct2.className    = 'score-value ' + scoreClass(100 - pct2);
+
+    // Highlight winner
+    if (mean1 < mean2) {
+      scoreMean.style.textDecoration  = 'underline';
+      scoreMean2.style.textDecoration = 'none';
+    } else {
+      scoreMean2.style.textDecoration  = 'underline';
+      scoreMean.style.textDecoration = 'none';
+    }
+  } else {
+    compareScore2Wrap.style.display    = 'none';
+    compareScore2PctWrap.style.display = 'none';
+  }
+}
+
+// ── Region selection ───────────────────────────────────
+
+function setupRegionSelection(canvas, drawingData, isDiff) {
+  regionCanvas = canvas;
+  canvas.classList.add('region-mode');
+  canvas.title = 'Drag to select a region for local score';
+
+  let startX, startY;
+
+  canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = CANVAS_SIZE / rect.width;
+    const scaleY = CANVAS_SIZE / rect.height;
+    startX = Math.round((e.clientX - rect.left) * scaleX);
+    startY = Math.round((e.clientY - rect.top)  * scaleY);
+    isSelecting = true;
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = CANVAS_SIZE / rect.width;
+    const scaleY = CANVAS_SIZE / rect.height;
+    const cx = Math.round((e.clientX - rect.left) * scaleX);
+    const cy = Math.round((e.clientY - rect.top)  * scaleY);
+
+    // Show pixel info tooltip (only when not dragging)
+    if (!isSelecting) {
+      showPixelTooltip(e, cx, cy, drawingData);
+    }
+
+    if (isSelecting) {
+      // Draw selection rect overlay
+      const ctx = canvas.getContext('2d');
+      // Redraw base
+      if (isDiff && diffImageData) {
+        ctx.putImageData(diffImageData.imageData, 0, 0);
+      } else {
+        ctx.putImageData(drawingData, 0, 0);
+      }
+      // Draw selection
+      ctx.strokeStyle = 'rgba(255,220,60,0.9)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(startX, startY, cx - startX, cy - startY);
+      ctx.setLineDash([]);
+    }
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    if (!isSelecting) return;
+    isSelecting = false;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = CANVAS_SIZE / rect.width;
+    const scaleY = CANVAS_SIZE / rect.height;
+    const endX = Math.round((e.clientX - rect.left) * scaleX);
+    const endY = Math.round((e.clientY - rect.top)  * scaleY);
+
+    const w = Math.abs(endX - startX);
+    const h = Math.abs(endY - startY);
+    if (w < 5 || h < 5) { regionInfo.textContent = ''; return; }
+
+    const threshold = parseFloat(thresholdSlider.value);
+    const result = computeRegionDiff(refImageData, svgImageData, threshold,
+                                     startX, startY, endX, endY);
+    if (result) {
+      regionInfo.textContent =
+        `Selected region (${w}×${h}px): ` +
+        `mean error ${result.meanError.toFixed(1)}, ` +
+        `${result.pctWithin.toFixed(1)}% within threshold`;
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    isSelecting = false;
+  });
+}
+
+function showPixelTooltip(e, cx, cy, data) {
+  if (cx < 0 || cy < 0 || cx >= CANVAS_SIZE || cy >= CANVAS_SIZE) return;
+  const i = (cy * CANVAS_SIZE + cx) * 4;
+  if (!refImageData || !data) return;
+  const rr = refImageData.data[i], rg = refImageData.data[i+1], rb = refImageData.data[i+2];
+  const sr = data.data[i], sg = data.data[i+1], sb = data.data[i+2];
+  const dr = rr - sr, dg = rg - sg, db = rb - sb;
+  const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+  tooltip.textContent = `(${cx},${cy}) ref(${rr},${rg},${rb}) → svg(${sr},${sg},${sb}) err=${dist.toFixed(0)}`;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (e.clientX + 14) + 'px';
+  tooltip.style.top  = (e.clientY - 8)  + 'px';
+}
+
+// ── Main render pipeline ───────────────────────────────
+
+async function doRender() {
+  clearError();
+  runBtn.disabled = true;
+  runBtn.textContent = 'Rendering…';
+  canvasArea.innerHTML = '<div class="status">Rendering…</div>';
+  regionInfo.textContent = '';
+
+  try {
+    // 1. Load reference
+    let refSrc;
+    if (refSelect.value === 'custom') {
+      const f = refFileInput.files[0];
+      if (!f) throw new Error('Please select a custom reference file.');
+      refSrc = URL.createObjectURL(f);
+    } else {
+      refSrc = refSelect.value;
+    }
+    refImageData = await loadRefImageData(refSrc);
+
+    // 2. Load drawing 1
+    if (svgSelect.value === '' && !svgFileInput.files[0]) {
+      throw new Error('Please select a drawing.');
+    }
+    let svgBlob1 = svgSelect.value === 'custom' ? svgFileInput.files[0] : null;
+    let svgSrc1  = svgSelect.value !== 'custom' ? svgSelect.value : null;
+    svgImageData = await loadDrawingImageData(svgSrc1, svgBlob1);
+
+    // 3. Load drawing 2 if compare mode
+    svgImageData2 = null;
+    if (currentMode === 'compare') {
+      const v2 = svgSelect2.value;
+      if (v2 && v2 !== '') {
+        let svgBlob2 = (v2 === 'custom2') ? svgFile2Input.files[0] : null;
+        let svgSrc2  = (v2 !== 'custom2') ? v2 : null;
+        svgImageData2 = await loadDrawingImageData(svgSrc2, svgBlob2);
+      }
+    }
+
+    // 4. Render chosen mode
+    switch (currentMode) {
+      case 'sidebyside': renderSideBySide(); break;
+      case 'overlay':    renderOverlay();    break;
+      case 'diff':       renderDiff();       break;
+      case 'compare':    renderCompare();    break;
+    }
+
+    heatmapLegend.classList.toggle('visible', currentMode === 'diff' || currentMode === 'compare');
+
+  } catch (err) {
+    showError(err.message);
+    canvasArea.innerHTML = '<div class="status">Error — see message above.</div>';
+    console.error(err);
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = 'Render & Diff';
+  }
+}
+
+// ── Event wiring ───────────────────────────────────────
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+
+    opacityGroup.style.display  = (currentMode === 'overlay') ? '' : 'none';
+    comparePanel.classList.toggle('visible', currentMode === 'compare');
+    compareScore2Wrap.style.display    = (currentMode === 'compare') ? '' : 'none';
+    compareScore2PctWrap.style.display = (currentMode === 'compare') ? '' : 'none';
+  });
+});
+
+refSelect.addEventListener('change', () => {
+  refFileGroup.style.display = refSelect.value === 'custom' ? '' : 'none';
+});
+
+svgSelect.addEventListener('change', () => {
+  svgFileGroup.style.display = svgSelect.value === 'custom' ? '' : 'none';
+});
+
+svgSelect2.addEventListener('change', () => {
+  svgFile2Group.style.display = svgSelect2.value === 'custom2' ? '' : 'none';
+});
+
+opacitySlider.addEventListener('input', () => {
+  opacityVal.textContent = opacitySlider.value + '%';
+});
+
+thresholdSlider.addEventListener('input', () => {
+  thresholdVal.textContent = thresholdSlider.value;
+});
+
+runBtn.addEventListener('click', doRender);
+
+// ── Keyboard shortcut: Enter to run ───────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !runBtn.disabled) doRender();
+});
+
+</script>
+</body>
+</html>

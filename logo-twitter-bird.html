@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitter Bird Logo — Claude Draws a Birb</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    h1 { font-size: 1.6rem; color: #333; }
+    p.sub { color: #666; font-size: 0.9rem; }
+    .logo-wrap {
+      background: white;
+      border-radius: 16px;
+      padding: 3rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+    a.back { color: #1DA1F2; text-decoration: none; font-size: 0.9rem; }
+    a.back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">&larr; Back to gallery</a>
+  <h1>Twitter Bird (Larry)</h1>
+  <p class="sub">Classic Twitter bird silhouette — visual memory reconstruction, bezier paths only.</p>
+  <div class="logo-wrap">
+    <!--
+      TWITTER BIRD — Clean reconstruction (Iteration 3)
+
+      The classic Twitter bird "Larry" faces RIGHT, head tilted upward.
+      Key visual characteristics:
+      - Open beak at upper-LEFT, pointing left-ish
+      - Rounded head
+      - Large body
+      - Wing sweeps UP from the body, peak at top-right area
+      - Three distinct tail feathers at lower-left, fanning downward-left
+      - White dot eye on head
+
+      I'll define the path as a series of clean cubic bezier curves.
+      The path goes CLOCKWISE starting from the beak tip.
+
+      Coordinate plan (viewBox 500 x 420, centered around 250,210):
+
+      Beak upper tip:   (80, 170)
+      Beak top base:    (115, 135)  ← where upper beak meets head
+      Head crown:       (195, 65)
+      Nape:             (250, 70)
+      Wing shoulder:    (290, 55)
+      Wing peak:        (355, 35)   ← highest point of wing
+      Wing right:       (430, 110)
+      Body upper-right: (440, 200)
+      Body lower-right: (400, 285)
+      Rump:             (340, 330)
+      Tail junction:    (265, 345)
+      Tail feather 1 tip: (225, 365) ← long downward feather
+      Tail notch 1-2:   (245, 340)
+      Tail feather 2 tip: (185, 340)
+      Tail notch 2-3:   (210, 315)
+      Tail feather 3 tip: (155, 305)
+      Belly lower-left: (155, 270)
+      Breast:           (95, 220)
+      Throat-lower:     (80, 195)
+      Lower beak base:  (115, 175)
+      Beak lower tip:   (80, 190)   ← lower jaw
+      → back to (80, 170) upper beak tip
+    -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 420" width="500" height="420">
+
+      <!--
+        Main silhouette — clockwise from upper beak tip.
+        Each C command: C cp1x,cp1y cp2x,cp2y endx,endy
+      -->
+      <path d="
+        M 80,170
+        C 72,158  68,142  80,130
+        C 88,118  104,112 120,120
+        C 128,96  145,72  170,57
+        C 192,44  222,40  250,52
+        C 262,36  282,24  308,26
+        C 330,28  348,44  354,66
+        C 366,50  382,40  394,48
+        C 386,64  372,76  356,82
+        C 372,79  386,70  392,58
+        C 385,76  372,90  355,96
+        C 372,116 380,142 374,166
+        C 368,190 352,208 330,216
+        C 340,234 338,256 324,270
+        C 310,284 288,290 270,286
+        C 276,300 272,316 260,324
+        C 244,316 238,300 244,284
+        C 228,295 210,298 194,292
+        C 196,278 206,267 220,264
+        C 204,268 186,260 178,244
+        C 182,230 196,222 212,226
+        C 194,215 180,198 180,178
+        C 192,190 208,196 224,192
+        C 208,174 200,150 204,126
+        C 212,140 218,157 214,172
+        C 228,150 250,136 276,133
+        C 260,148 254,168 260,187
+        C 274,166 300,152 328,152
+        C 314,168 311,192 320,213
+        C 336,193 360,183 382,186
+        C 374,207 362,224 345,231
+        C 325,256 296,270 265,272
+        C 268,285 262,300 250,306
+        C 235,299 230,283 236,268
+        C 220,278 203,282 187,276
+        C 189,264 200,254 215,252
+        C 197,253 180,243 175,228
+        C 180,214 195,208 211,213
+        C 191,199 180,178 182,155
+        C 192,168 207,176 224,173
+        C 205,153 202,126 215,103
+        C 222,118 222,138 214,155
+        C 228,130 253,116 280,115
+        C 264,131 259,153 267,173
+        C 282,150 310,138 340,141
+        C 326,158 323,184 334,206
+        C 352,184 378,174 403,180
+        C 394,203 380,222 360,230
+        C 340,254 310,270 278,272
+        C 279,286 272,301 259,307
+        C 244,299 240,283 246,268
+
+        M 80,190
+        C 72,196 68,210 76,220
+        C 82,228 96,232 110,228
+        C 102,215 92,202 80,190
+        Z
+      " fill="#1DA1F2"/>
+
+      <!-- Eye -->
+      <circle cx="188" cy="100" r="17" fill="white"/>
+      <circle cx="192" cy="98"  r="9"  fill="#1DA1F2"/>
+
+    </svg>
+  </div>
+</body>
+</html>

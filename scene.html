@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Draws a Birb - Two Robins on a Branch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.35);
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #b8aa90;
+      font-style: italic;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    svg {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+      max-width: 100%;
+      height: auto;
+    }
+    .footer-link {
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: #a09880;
+      text-align: center;
+    }
+    a { color: #c8b890; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Two Robins on a Branch</h1>
+  <p class="subtitle">Multi-subject scene — adult &amp; juvenile European Robin</p>
+
+  <!--
+    COMPOSITION (700 × 480):
+    - Sky gradient background (top blue → warm cream at horizon ~y=300)
+    - Two blurred distant tree silhouettes (left & right, desaturated)
+    - Blurred mid-ground hedge strip (bottom 1/3)
+    - Horizontal branch from x=0 to x=700, centred around y=310
+    - Left adult robin: body ~130px wide, facing RIGHT, at x≈180,y≈250
+    - Right juvenile robin: body ~85px wide, facing LEFT, at x≈490,y≈268
+      (juvenile is smaller + lighter orange, slightly higher perch)
+    - Leaf clusters on branch
+    - Vignette overlay
+  -->
+
+  <svg id="scene" width="700" height="480" viewBox="0 0 700 480" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+
+      <!-- SKY gradient -->
+      <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"   stop-color="#6ba3c8"/>
+        <stop offset="55%"  stop-color="#a8c8dc"/>
+        <stop offset="85%"  stop-color="#d4c8a8"/>
+        <stop offset="100%" stop-color="#c8b890"/>
+      </linearGradient>
+
+      <!-- Background tree blur filter -->
+      <filter id="treeBlur" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="6"/>
+      </filter>
+
+      <!-- Mild hedge blur -->
+      <filter id="hedgeBlur" x="-5%" y="-5%" width="110%" height="110%">
+        <feGaussianBlur stdDeviation="4"/>
+      </filter>
+
+      <!-- Branch gradient (dark bark, lighter top) -->
+      <linearGradient id="branchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"   stop-color="#6b4a2a"/>
+        <stop offset="40%"  stop-color="#4a3018"/>
+        <stop offset="100%" stop-color="#2e1c0a"/>
+      </linearGradient>
+
+      <!-- Adult body gradient (orange, lit from top-right) -->
+      <linearGradient id="adultBodyGrad" x1="70%" y1="15%" x2="20%" y2="90%">
+        <stop offset="0%"   stop-color="#F09060"/>
+        <stop offset="100%" stop-color="#D05828"/>
+      </linearGradient>
+
+      <!-- Adult belly gradient -->
+      <linearGradient id="adultBellyGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%"   stop-color="#F09830"/>
+        <stop offset="100%" stop-color="#E88020"/>
+      </linearGradient>
+
+      <!-- Juvenile body gradient (paler orange, more washed) -->
+      <linearGradient id="juvBodyGrad" x1="70%" y1="15%" x2="20%" y2="90%">
+        <stop offset="0%"   stop-color="#E8B080"/>
+        <stop offset="100%" stop-color="#C87040"/>
+      </linearGradient>
+
+      <!-- Juvenile belly gradient -->
+      <linearGradient id="juvBellyGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%"   stop-color="#E8A840"/>
+        <stop offset="100%" stop-color="#D49030"/>
+      </linearGradient>
+
+      <!-- Vignette -->
+      <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+        <stop offset="0%"   stop-color="transparent"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.52)"/>
+      </radialGradient>
+
+    </defs>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 1: SKY BACKGROUND                                       -->
+    <!-- ============================================================ -->
+    <rect width="700" height="480" fill="url(#skyGrad)"/>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 2: DISTANT BLURRED TREES (desaturated, low contrast)   -->
+    <!-- ============================================================ -->
+    <g filter="url(#treeBlur)" opacity="0.55">
+      <!-- Left tree cluster -->
+      <ellipse cx="100" cy="200" rx="90" ry="130" fill="#7a9e6a"/>
+      <ellipse cx="150" cy="220" rx="70" ry="110" fill="#6a9060"/>
+      <ellipse cx="60"  cy="230" rx="60" ry="100" fill="#7aaa6a"/>
+      <!-- Right tree cluster -->
+      <ellipse cx="590" cy="195" rx="90" ry="125" fill="#7a9e6a"/>
+      <ellipse cx="640" cy="210" rx="70" ry="115" fill="#6a9060"/>
+      <ellipse cx="540" cy="215" rx="65" ry="105" fill="#7aaa6a"/>
+      <!-- Central background trees (smaller, further) -->
+      <ellipse cx="340" cy="230" rx="55" ry="90" fill="#88aa78" opacity="0.7"/>
+      <ellipse cx="290" cy="245" rx="40" ry="70" fill="#80a070" opacity="0.6"/>
+      <ellipse cx="390" cy="240" rx="45" ry="75" fill="#88aa78" opacity="0.6"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 3: HORIZON HAZE                                         -->
+    <!-- ============================================================ -->
+    <rect x="0" y="270" width="700" height="30" fill="rgba(210,200,170,0.25)"/>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 4: MID-GROUND HEDGE STRIP                              -->
+    <!-- ============================================================ -->
+    <g filter="url(#hedgeBlur)" opacity="0.8">
+      <ellipse cx="350" cy="340" rx="380" ry="55" fill="#4a7030"/>
+      <ellipse cx="120" cy="345" rx="130" ry="40" fill="#3d6028"/>
+      <ellipse cx="580" cy="342" rx="120" ry="38" fill="#3d6028"/>
+      <ellipse cx="350" cy="355" rx="380" ry="40" fill="#3a5c25"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 5: MAIN BRANCH                                          -->
+    <!-- ============================================================ -->
+    <!-- Branch body: slight natural curve, thicker at left edge -->
+    <path d="M -5,318 Q 180,308 350,312 Q 520,316 705,310
+             L 705,330 Q 520,336 350,332 Q 180,328 -5,338 Z"
+          fill="url(#branchGrad)"/>
+    <!-- Branch top highlight (lighter bark edge) -->
+    <path d="M -5,318 Q 180,308 350,312 Q 520,316 705,310
+             L 705,314 Q 520,320 350,316 Q 180,312 -5,322 Z"
+          fill="#8b6040" opacity="0.5"/>
+    <!-- Bark texture lines -->
+    <path d="M 80,312 Q 120,316 160,313" stroke="#3a2010" stroke-width="1" fill="none" opacity="0.5"/>
+    <path d="M 200,314 Q 250,318 300,315" stroke="#3a2010" stroke-width="1" fill="none" opacity="0.5"/>
+    <path d="M 400,313 Q 450,317 490,314" stroke="#3a2010" stroke-width="1" fill="none" opacity="0.5"/>
+    <path d="M 550,311 Q 600,315 640,312" stroke="#3a2010" stroke-width="1" fill="none" opacity="0.5"/>
+    <!-- Branch shadow on hedge below -->
+    <ellipse cx="350" cy="340" rx="340" ry="8" fill="rgba(0,0,0,0.2)"/>
+
+    <!-- ============================================================ -->
+    <!-- LEAF CLUSTERS ON BRANCH                                       -->
+    <!-- ============================================================ -->
+    <!-- Left end leaf spray -->
+    <g opacity="0.9">
+      <ellipse cx="30"  cy="298" rx="22" ry="14" fill="#4a8030" transform="rotate(-25,30,298)"/>
+      <ellipse cx="55"  cy="290" rx="24" ry="13" fill="#528838" transform="rotate(-15,55,290)"/>
+      <ellipse cx="78"  cy="296" rx="20" ry="12" fill="#3e7228" transform="rotate(10,78,296)"/>
+    </g>
+    <!-- Between-birds leaf cluster (decorative midpoint) -->
+    <g opacity="0.9">
+      <ellipse cx="332" cy="300" rx="20" ry="12" fill="#4a8030" transform="rotate(-20,332,300)"/>
+      <ellipse cx="355" cy="294" rx="22" ry="11" fill="#528838" transform="rotate(5,355,294)"/>
+      <ellipse cx="375" cy="302" rx="18" ry="11" fill="#3e7228" transform="rotate(15,375,302)"/>
+    </g>
+    <!-- Right end leaf spray -->
+    <g opacity="0.9">
+      <ellipse cx="640" cy="299" rx="22" ry="13" fill="#4a8030" transform="rotate(-10,640,299)"/>
+      <ellipse cx="662" cy="292" rx="20" ry="12" fill="#528838" transform="rotate(20,662,292)"/>
+      <ellipse cx="680" cy="300" rx="18" ry="11" fill="#3e7228" transform="rotate(-5,680,300)"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 6: ADULT ROBIN (LEFT, larger, facing RIGHT)            -->
+    <!-- Body centre: (175, 272), body rx≈62 ry≈48                   -->
+    <!-- Head centre: (220, 238), r≈32                                -->
+    <!-- ============================================================ -->
+    <g id="adult-robin">
+      <!-- Feet gripping branch -->
+      <!-- Left foot: 3 toes forward, 1 back -->
+      <g fill="#1D2B3A">
+        <!-- Leg left -->
+        <rect x="148" y="306" width="7" height="16" rx="3"/>
+        <!-- Toes left foot -->
+        <path d="M 148,322 L 125,326 M 148,322 L 135,330 M 148,322 L 152,328 M 155,322 L 170,326" stroke="#1D2B3A" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <!-- Leg right -->
+        <rect x="185" y="306" width="7" height="16" rx="3"/>
+        <!-- Toes right foot -->
+        <path d="M 185,322 L 163,326 M 185,322 L 172,330 M 185,322 L 189,328 M 192,322 L 207,326" stroke="#1D2B3A" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <!-- Tail (behind body, pointing left-back) -->
+      <path d="M 128,290 Q 75,300 52,318 Q 62,330 76,326 L 135,308 Z"
+            fill="#C05030"/>
+
+      <!-- Body ellipse (orange-brown) -->
+      <ellipse cx="175" cy="272" rx="62" ry="48" fill="url(#adultBodyGrad)"/>
+
+      <!-- Yellow-orange belly (lower crescent visible below wing) -->
+      <ellipse cx="170" cy="305" rx="44" ry="20" fill="url(#adultBellyGrad)"/>
+
+      <!-- Dark wing (covers most of body) -->
+      <path d="
+        M 220,240
+        Q 195,222 162,218
+        Q 130,216 112,236
+        Q 100,252 102,272
+        L 106,296
+        Q 116,314 134,318
+        Q 152,322 168,316
+        Q 184,308 190,290
+        Q 196,272 194,252
+        Q 192,238 220,240
+        Z"
+            fill="#1D2B3A"/>
+
+      <!-- Blue-gray strip (upper wing highlight) -->
+      <path d="
+        M 220,240
+        Q 195,222 162,218
+        Q 130,216 112,236
+        Q 100,250 102,264
+        Q 118,252 148,244
+        Q 176,238 210,240
+        Q 215,240 220,240
+        Z"
+            fill="#90B4BC"/>
+
+      <!-- Head -->
+      <circle cx="220" cy="238" r="32" fill="#1D2B3A"/>
+
+      <!-- Orange face patch (robin's red breast continues to face) -->
+      <path d="M 220,238 Q 235,225 248,235 Q 252,246 240,256 Q 228,262 215,256 Q 205,248 210,238 Z"
+            fill="#D05828" opacity="0.7"/>
+
+      <!-- Eye -->
+      <circle cx="232" cy="230" r="9" fill="white"/>
+      <circle cx="234" cy="231" r="3.5" fill="#1D2B3A"/>
+      <!-- Eye highlight -->
+      <circle cx="236" cy="228" r="1.5" fill="white"/>
+
+      <!-- Beak (pointing right) -->
+      <path d="M 248,237 L 276,241 L 248,245 Z" fill="#4a3820"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 7: JUVENILE ROBIN (RIGHT, smaller, facing LEFT)        -->
+    <!-- Body centre: (490, 282), body rx≈42 ry≈32                   -->
+    <!-- Head centre: (453, 262), r≈22                                -->
+    <!-- Juvenile: paler colours, spotted chest (transitional plumage)-->
+    <!-- ============================================================ -->
+    <g id="juvenile-robin">
+      <!-- Feet gripping branch -->
+      <g fill="#1D2B3A">
+        <!-- Leg left -->
+        <rect x="472" y="306" width="5" height="14" rx="2.5"/>
+        <!-- Toes left foot -->
+        <path d="M 472,320 L 452,324 M 472,320 L 460,328 M 472,320 L 475,326 M 477,320 L 490,324" stroke="#1D2B3A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <!-- Leg right -->
+        <rect x="500" y="306" width="5" height="14" rx="2.5"/>
+        <!-- Toes right foot -->
+        <path d="M 500,320 L 480,324 M 500,320 L 490,328 M 500,320 L 503,326 M 505,320 L 518,324" stroke="#1D2B3A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <!-- Tail (pointing right-back) -->
+      <path d="M 524,286 Q 568,294 588,310 Q 580,322 568,318 L 522,302 Z"
+            fill="#C06848"/>
+
+      <!-- Body ellipse (paler, juvenile) -->
+      <ellipse cx="490" cy="282" rx="42" ry="32" fill="url(#juvBodyGrad)"/>
+
+      <!-- Belly (lighter, with slight spotting suggestion) -->
+      <ellipse cx="487" cy="306" rx="30" ry="14" fill="url(#juvBellyGrad)"/>
+
+      <!-- Dark wing (juvenile: browner, less saturated navy) -->
+      <path d="
+        M 455,262
+        Q 470,248 488,244
+        Q 508,242 524,256
+        Q 534,268 532,282
+        L 530,300
+        Q 522,312 510,316
+        Q 496,320 483,314
+        Q 470,307 466,292
+        Q 462,278 460,266
+        Q 458,262 455,262
+        Z"
+            fill="#2E3D4A"/>
+
+      <!-- Blue-gray strip (juvenile, smaller) -->
+      <path d="
+        M 455,262
+        Q 470,248 488,244
+        Q 508,242 524,256
+        Q 530,264 530,272
+        Q 514,264 492,260
+        Q 472,258 460,262
+        Q 457,262 455,262
+        Z"
+            fill="#8AAAB2"/>
+
+      <!-- Head (facing left) -->
+      <circle cx="453" cy="262" r="22" fill="#2E3D4A"/>
+
+      <!-- Juvenile spotted breast - subtle tan/buff spots -->
+      <ellipse cx="488" cy="285" rx="14" ry="10" fill="#D4A060" opacity="0.4"/>
+      <circle cx="480" cy="278" r="5" fill="#D4A060" opacity="0.3"/>
+      <circle cx="494" cy="294" r="4" fill="#C89050" opacity="0.3"/>
+      <circle cx="500" cy="281" r="3.5" fill="#D4A060" opacity="0.25"/>
+
+      <!-- Eye -->
+      <circle cx="442" cy="256" r="7" fill="white"/>
+      <circle cx="441" cy="257" r="2.8" fill="#1D2B3A"/>
+      <circle cx="440" cy="255" r="1.2" fill="white"/>
+
+      <!-- Beak (pointing left) -->
+      <path d="M 435,261 L 410,264 L 435,267 Z" fill="#4a3820"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 8: FOREGROUND OVERLAPPING LEAVES (in front of birds)  -->
+    <!-- ============================================================ -->
+    <!-- A few leaves hanging in front at top, partially in frame -->
+    <g opacity="0.85">
+      <ellipse cx="270" cy="30" rx="28" ry="15" fill="#3a7028" transform="rotate(30,270,30)"/>
+      <ellipse cx="300" cy="20" rx="25" ry="13" fill="#4a8030" transform="rotate(-10,300,20)"/>
+      <ellipse cx="250" cy="22" rx="22" ry="12" fill="#3a6820" transform="rotate(20,250,22)"/>
+      <path d="M 270,30 L 268,75" stroke="#2a5018" stroke-width="1.5" opacity="0.6"/>
+      <path d="M 300,20 L 298,65" stroke="#2a5018" stroke-width="1.5" opacity="0.6"/>
+
+      <ellipse cx="440" cy="25" rx="26" ry="14" fill="#3a7028" transform="rotate(-20,440,25)"/>
+      <ellipse cx="465" cy="15" rx="22" ry="12" fill="#4a8030" transform="rotate(15,465,15)"/>
+      <path d="M 440,25 L 438,70" stroke="#2a5018" stroke-width="1.5" opacity="0.6"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LAYER 9: VIGNETTE                                             -->
+    <!-- ============================================================ -->
+    <rect width="700" height="480" fill="url(#vignette)" opacity="0.7"/>
+
+  </svg>
+
+  <div class="footer-link">
+    <p>SVG drawn by Claude (Anthropic) &bull; <a href="lessons-learnt.html">Lessons Learnt</a> &bull; <a href="index.html">Back to Gallery</a></p>
+  </div>
+</body>
+</html>
