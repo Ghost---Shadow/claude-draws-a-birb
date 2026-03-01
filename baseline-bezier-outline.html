@@ -82,6 +82,44 @@
     }
     a { color: #c8b890; text-decoration: none; }
     a:hover { text-decoration: underline; }
+
+    /* ── toggle switch ── */
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      color: #e8dcc8;
+      user-select: none;
+    }
+    .toggle-label input { display: none; }
+    .toggle-track {
+      width: 42px; height: 24px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 12px;
+      position: relative;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle-label input:checked ~ .toggle-track {
+      background: rgba(232,131,78,0.55);
+      border-color: rgba(232,131,78,0.7);
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      background: #e8dcc8;
+      border-radius: 50%;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle-label input:checked ~ .toggle-track .toggle-thumb {
+      transform: translateX(18px);
+    }
   </style>
 </head>
 <body>
@@ -89,12 +127,17 @@
 
   <div class="controls">
     <button onclick="flipBoth()">Flip Both (Artist Mirror)</button>
+    <label class="toggle-label">
+      <input type="checkbox" id="fillToggle" onchange="toggleFill(this)">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      Show Fills
+    </label>
     <button onclick="location.href='index.html'">Back to Gallery</button>
   </div>
 
   <div class="comparison">
     <div class="drawing-container">
-      <div class="label">My SVG Drawing (Bezier Stroke Outlines Only)</div>
+      <div class="label" id="drawingLabel">My SVG Drawing (Outlines Only)</div>
 
       <!--
         Pure stroke-only bezier line art. No fills — every path has fill="none".
@@ -122,6 +165,7 @@
         -->
         <path fill="none" stroke="#e8834e" stroke-width="3.5"
               stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#e8834e"
               d="M 89,313
                  C  91,309   95,296  101,287
                  C 107,278  118,269  126,260
@@ -154,6 +198,7 @@
         -->
         <path fill="none" stroke="#d96040" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#d96040"
               d="M 163,287
                  C 160,289  150,296  143,300
                  C 137,304  130,309  124,313
@@ -225,6 +270,7 @@
         -->
         <path fill="none" stroke="#c8dce8" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#253146"
               d="M 381,132
                  C 379,120  367,121  360,118
                  C 353,115  347,113  338,113
@@ -241,15 +287,18 @@
         -->
         <path fill="none" stroke="#c8dce8" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round"
+              data-fill="#253146"
               d="M 381,132
                  C 400,135  430,148  440,156
-                 C 430,165  395,185  370,191"/>
+                 C 430,165  395,185  370,191
+                 Z"/>
 
         <!-- ── EYE ──
              Small circle at (355,159) r≈4, drawn as two bezier arcs.
              k = 0.5523 × 4 ≈ 2.2
         -->
         <path fill="none" stroke="#ffffff" stroke-width="2"
+              data-fill="#ffffff"
               d="M 355,155
                  C 357.2,155  359,156.8  359,159
                  C 359,161.2  357.2,163  355,163
@@ -308,6 +357,15 @@
       const t = flipped ? 'scaleX(-1)' : '';
       document.getElementById('myDrawing').style.transform = t;
       document.getElementById('refPhoto').style.transform = t;
+    }
+
+    function toggleFill(checkbox) {
+      const on = checkbox.checked;
+      document.querySelectorAll('[data-fill]').forEach(el => {
+        el.setAttribute('fill', on ? el.dataset.fill : 'none');
+      });
+      document.getElementById('drawingLabel').textContent =
+        on ? 'My SVG Drawing (Outlines + Fills)' : 'My SVG Drawing (Outlines Only)';
     }
   </script>
 </body>
