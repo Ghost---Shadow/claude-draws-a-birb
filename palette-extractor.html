@@ -546,7 +546,11 @@
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) loadFile(file);
   });
-  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('click', e => {
+    // Don't double-trigger when the click came from the label (which already opens the picker natively)
+    if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
+    fileInput.click();
+  });
   fileInput.addEventListener('change', () => {
     if (fileInput.files[0]) loadFile(fileInput.files[0]);
   });
@@ -911,27 +915,28 @@
     sampledColors.forEach(s => {
       if (!allColors.find(p => p.hex === s.hex)) allColors.push({...s, pct: 0});
     });
-    paletteOutput.value = buildSVGSnippet(paletteColors);
+    paletteOutput.value = buildSVGSnippet(allColors);
   }
 
   btnCopySVG.addEventListener('click', () => {
-    paletteOutput.value = buildSVGSnippet(paletteColors);
-    copyTextArea();
+    const allColors = [...paletteColors];
+    sampledColors.forEach(s => { if (!allColors.find(p => p.hex === s.hex)) allColors.push({...s, pct: 0}); });
+    paletteOutput.value = buildSVGSnippet(allColors);
+    copyTextArea(btnCopySVG, 'Copy SVG snippet');
   });
   btnCopyCSS.addEventListener('click', () => {
     paletteOutput.value = buildCSSVars(paletteColors);
-    copyTextArea();
+    copyTextArea(btnCopyCSS, 'Copy CSS vars');
   });
   btnCopyHex.addEventListener('click', () => {
     paletteOutput.value = buildHexList(paletteColors);
-    copyTextArea();
+    copyTextArea(btnCopyHex, 'Copy hex list');
   });
 
-  function copyTextArea() {
+  function copyTextArea(btn, originalLabel) {
     navigator.clipboard.writeText(paletteOutput.value).then(() => {
-      const orig = btnCopySVG.textContent;
-      btnCopySVG.textContent = 'Copied!';
-      setTimeout(() => { btnCopySVG.textContent = 'Copy SVG snippet'; }, 1400);
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = originalLabel; }, 1400);
     });
   }
 
@@ -1144,6 +1149,8 @@
     const ctx = overlayCanvas.getContext('2d');
     ctx.clearRect(0, 0, displayW, displayH);
   });
+
+})(); // end IIFE
 </script>
 </body>
 </html>

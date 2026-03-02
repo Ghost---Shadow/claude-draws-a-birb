@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AB Test - New Protocol Bird</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #4a7c23 30%, #3d6b1c 60%, #1a3a0a 100%);
+      font-family: Georgia, serif;
+      color: #e8dcc8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 0.5rem; text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+    p.sub { font-size: 0.82rem; color: #a8c890; margin-bottom: 1.5rem; }
+    .comparison {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .comparison.flipped svg,
+    .comparison.flipped img { transform: scaleX(-1); }
+    .panel { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .panel p { font-size: 0.82rem; color: #c8b890; }
+    svg {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    img {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      width: 500px;
+      height: 500px;
+      object-fit: cover;
+    }
+    button {
+      margin-bottom: 1.5rem;
+      padding: 0.4rem 1.2rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #e8dcc8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button:hover { background: rgba(255,255,255,0.25); }
+  </style>
+</head>
+<body>
+  <h1>Claude Draws a Birb — New Protocol</h1>
+  <p class="sub">AB Test Treatment: palette-extractor + grid-overlay tools used</p>
+  <button onclick="document.querySelector('.comparison').classList.toggle('flipped')">
+    Flip Both (Artist Mirror)
+  </button>
+  <div class="comparison">
+    <div class="panel">
+      <p>My SVG Drawing (New Protocol)</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+        <defs>
+          <!--
+            PALETTE (from palette-extractor.html — k-means on bird subject pixels, excluding white bg)
+            40.5%  dark-navy          #21253D   (body, head, wing overlay, beak, legs)
+            28.9%  vivid-orange       #F89955   (orange breast — dominant visible colour)
+            12.4%  warm-yellow        #FBAE44   (yellow belly)
+            10.9%  muted-blue-gray    #9DBAC2   (blue-gray wing accent)
+             4.9%  coral-salmon       #EE7450   (tail)
+             1.1%  pinkish-skin       #EDCDBD   (minor, skip)
+             1.0%  dark-gray          #605A63   (minor shadow)
+             0.3%  very-dark-navy     #1F233B   (deepest shadow)
+            Eye white: #FDFEFF
+            Legs: #22273B (dark navy family)
+
+            SAMPLED FEATURE COLORS:
+            Eye white area: #FDFEFF
+            Legs/feet:      #22273B
+            Tail (coral):   #F07450
+          -->
+
+          <!--
+            GRID BOUNDING BOXES (10x10 grid, A=col0, row1=top — from pixel scan of baseline.jpg)
+            Converted to canvas 500x500 coords (scale = 500/1920 = 0.2604):
+
+            head:   cols E-I, rows 3-5  => canvas (234,113)-(444,247)  center≈(339,180) r≈75
+            body:   cols C-I, rows 3-8  => canvas (100,114)-(444,384)  (full dark silhouette)
+            wing:   cols C-G, rows 4-8  => canvas (145,151)-(304,354)  [blue-gray accent]
+            breast: cols B-H, rows 4-8  => canvas (52,151)-(379,359)   [orange]
+            belly:  cols C-H, rows 4-7  => canvas (140,151)-(379,330)  [yellow]
+            legs:   cols E-G, rows 7-8  => canvas (213,339)-(349,384)
+            tail:   cols B-G, rows 4-8  => canvas (52,151)-(346,360)   [coral, bottom-left]
+            beak:   col I, row 4        => canvas (404,150)-(444,164)   [dark navy, points right]
+            eye:    col H, row 4        => canvas center=(383,164) r≈33
+
+            PROPORTION CHECKS:
+            Head r=75px / 500px canvas = 15% (within 15-35% rule — tight bird, ok)
+            Body: fitting inside (100,114)-(444,384) => rx≈172, ry≈135, rx/ry≈1.27
+            Adjusted body for rx/ry=1.8: rx=162, ry=90 centered at (255,280)
+            Orange breast: ~28.9% of pixels => dominant visible colour (correct vs navy 40.5% total)
+          -->
+
+          <!-- No filters — flat geometric style -->
+        </defs>
+
+        <!-- Z-ORDER (back to front):
+          1. White background (implicit)
+          2. Tail (coral, narrow pointed shape, extends bottom-left)
+          3. Body silhouette (dark navy ellipse — large, fills lower 2/3)
+          4. Orange breast (large half covering right+lower body)
+          5. Yellow belly (small crescent at very bottom)
+          6. Blue-gray wing accent (large diagonal zone, upper-left of body)
+          7. Head (dark navy circle, top-right, partially overlaps body)
+          8. Beak (dark navy, thin pointed shape angled slightly down)
+          9. Eye white circle
+          10. Eye pupil (dark)
+          11. Legs + feet
+          12. Ground shadow
+        -->
+
+        <!-- === ITERATION 5 FIXES (final pass) ===
+          Fix 1: Tail attached to body bottom-left — origin point now touches body ellipse edge
+                 Body cx=295, cy=270 (shifted right +17px). Tail origin from body left edge.
+          Fix 2: Yellow belly made bigger — taller crescent, clearly visible
+          Fix 3: Entire bird shifted right +17px more for better centering
+          All cascade: body cx=295, head cx=385, wing, breast, legs all +17px
+        -->
+
+        <!-- Body ellipse for ref: cx=295, cy=270, rx=158, ry=120
+             Left edge of body: x = 295-158 = 137
+             Bottom-left of body (45° from center): approx (183, 355)
+        -->
+
+        <!-- === 2. TAIL (#EE7450 — behind body, grows from body's lower-left edge) === -->
+        <!-- Tail origin: body lower-left area around (155, 330)-(170, 350) -->
+        <path d="M 168,335 C 130,340 85,352 58,372 C 90,348 132,332 165,322 Z"
+              fill="#EE7450"/>
+        <path d="M 175,352 C 142,362 108,388 88,412 C 116,382 150,356 172,344 Z"
+              fill="#EE7450"/>
+
+        <!-- === 3. BODY (#21253D) — shifted right +17px ===
+             cx=295, cy=270, rx=158, ry=120. rx/ry=1.32 -->
+        <ellipse cx="295" cy="270" rx="158" ry="120" fill="#21253D"/>
+
+        <!-- === 4. ORANGE BREAST (#F89955) — +17px on all x === -->
+        <path d="M 325,168
+                 C 375,168 430,200 447,245
+                 C 463,287 449,340 413,365
+                 C 377,388 325,393 279,387
+                 C 235,381 198,365 178,345
+                 C 158,326 164,295 186,276
+                 C 214,255 256,244 294,240
+                 C 324,236 334,192 325,168 Z"
+              fill="#F89955"/>
+
+        <!-- === 5. YELLOW BELLY (#FBAE44) — BIGGER, clearly visible === -->
+        <!-- Taller crescent: rises higher to y=330, wider span -->
+        <path d="M 210,352 C 238,376 278,392 322,387 C 362,382 392,364 402,346
+                 C 376,336 340,330 300,329 C 263,328 232,336 210,352 Z"
+              fill="#FBAE44"/>
+
+        <!-- === 6. BLUE-GRAY WING (#9DBAC2) — +17px on x === -->
+        <path d="M 142,218
+                 C 152,173 196,146 248,140
+                 C 294,135 338,148 366,166
+                 C 385,180 388,202 370,219
+                 C 347,242 306,254 264,258
+                 C 222,261 180,253 154,238
+                 C 144,230 139,224 142,218 Z"
+              fill="#9DBAC2"/>
+
+        <!-- === 7. HEAD (#21253D) — cx=385 (+17) === -->
+        <circle cx="385" cy="163" r="72" fill="#21253D"/>
+
+        <!-- === 8. BEAK (#21253D) — from head right edge (385+72=457) === -->
+        <path d="M 449,152 L 478,166 L 449,178 Z" fill="#21253D"/>
+
+        <!-- === 9. EYE WHITE (#FDFEFF) — cx=427 (+17) === -->
+        <circle cx="427" cy="147" r="15" fill="#FDFEFF"/>
+
+        <!-- === 10. EYE PUPIL (#21253D) === -->
+        <circle cx="429" cy="149" r="8" fill="#21253D"/>
+
+        <!-- === 11. LEGS + FEET (#22273B) — +17px on x === -->
+        <line x1="294" y1="347" x2="284" y2="393" stroke="#22273B" stroke-width="7" stroke-linecap="round"/>
+        <line x1="337" y1="350" x2="327" y2="395" stroke="#22273B" stroke-width="7" stroke-linecap="round"/>
+        <!-- Feet -->
+        <path d="M 284,393 L 258,402 M 284,393 L 279,406 M 284,393 L 300,400"
+              stroke="#22273B" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <path d="M 327,395 L 301,404 M 327,395 L 322,408 M 327,395 L 343,402"
+              stroke="#22273B" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+
+        <!-- === 12. GROUND SHADOW === -->
+        <ellipse cx="305" cy="410" rx="70" ry="9" fill="rgba(0,0,0,0.09)"/>
+
+      </svg>
+    </div>
+    <div class="panel">
+      <p>Reference Photo</p>
+      <img src="images/baseline.jpg" alt="Robin reference photo">
+    </div>
+  </div>
+</body>
+</html>

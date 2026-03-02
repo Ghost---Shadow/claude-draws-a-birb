@@ -284,6 +284,49 @@
       display: none;
     }
     .error-box.visible { display: block; }
+
+    /* ── Subject mask controls ───────────────────── */
+    .mask-toggle-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: 160px;
+    }
+    .mask-toggle-group > .group-label {
+      font-size: 0.72rem;
+      color: #8a9aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .mask-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .mask-toggle-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #4a9aba;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .mask-toggle-row label {
+      font-size: 0.85rem;
+      color: #ccd;
+      cursor: pointer;
+    }
+    .mask-threshold-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .mask-threshold-row .slider-label {
+      font-size: 0.7rem;
+      color: #7a8a9a;
+      display: flex;
+      justify-content: space-between;
+    }
+    .mask-threshold-row .slider-label span { color: #ccd; }
   </style>
 </head>
 <body>
@@ -345,8 +388,22 @@
   </div>
 
   <div class="slider-group" id="thresholdGroup">
-    <label>Match Threshold <span id="thresholdVal">30</span></label>
-    <input type="range" id="thresholdSlider" min="5" max="100" value="30">
+    <label>Match Threshold (0–255) <span id="thresholdVal">30</span></label>
+    <input type="range" id="thresholdSlider" min="1" max="255" value="30">
+  </div>
+
+  <div class="mask-toggle-group" id="maskGroup">
+    <div class="group-label">Subject Mask</div>
+    <div class="mask-toggle-row">
+      <input type="checkbox" id="maskToggle">
+      <label for="maskToggle">Exclude background pixels</label>
+    </div>
+    <div class="mask-threshold-row" id="maskThresholdRow" style="display:none">
+      <div class="slider-label">
+        BG threshold (deltaE from white/black) <span id="maskThresholdVal">20</span>
+      </div>
+      <input type="range" id="maskThresholdSlider" min="1" max="100" value="20" style="width:100%;accent-color:#4a9aba;">
+    </div>
   </div>
 
   <button class="run-btn" id="runBtn">Render &amp; Diff</button>
@@ -381,7 +438,7 @@
 <!-- ── Score bar ─────────────────────────────────────── -->
 <div class="score-bar" id="scoreBar">
   <div class="score-item">
-    <span class="score-label">Mean Error (RGB)</span>
+    <span class="score-label">Mean Error (0–255)</span>
     <span class="score-value" id="scoreMean">—</span>
   </div>
   <div class="score-item">
@@ -389,7 +446,7 @@
     <span class="score-value" id="scorePct">—</span>
   </div>
   <div class="score-item">
-    <span class="score-label">Max Error</span>
+    <span class="score-label">Max Error (0–255)</span>
     <span class="score-value" id="scoreMax">—</span>
   </div>
   <div class="score-item" id="compareScore2Wrap" style="display:none">
@@ -399,6 +456,10 @@
   <div class="score-item" id="compareScore2PctWrap" style="display:none">
     <span class="score-label">Drawing 2 — Within Threshold</span>
     <span class="score-value" id="scorePct2">—</span>
+  </div>
+  <div class="score-item" id="maskCountWrap" style="display:none">
+    <span class="score-label">Subject Pixels</span>
+    <span class="score-value" id="scoreMaskCount" style="font-size:0.95rem;">—</span>
   </div>
   <div class="region-info" id="regionInfo"></div>
 </div>
@@ -431,6 +492,7 @@ let svgImageData = null;   // ImageData for drawing 1
 let svgImageData2 = null;  // ImageData for drawing 2 (compare mode)
 let diffImageData = null;  // computed diff map
 let diffImageData2 = null;
+let currentMask = null;    // Uint8Array from computeMask(), or null when disabled
 
 // Region selection state
 let isSelecting = false;
@@ -471,6 +533,12 @@ const heatmapLegend  = document.getElementById('heatmapLegend');
 const tooltip        = document.getElementById('tooltip');
 const errorBox       = document.getElementById('errorBox');
 const renderFrame    = document.getElementById('renderFrame');
+const maskToggle         = document.getElementById('maskToggle');
+const maskThresholdRow   = document.getElementById('maskThresholdRow');
+const maskThresholdSlider= document.getElementById('maskThresholdSlider');
+const maskThresholdVal   = document.getElementById('maskThresholdVal');
+const maskCountWrap      = document.getElementById('maskCountWrap');
+const scoreMaskCount     = document.getElementById('scoreMaskCount');
 
 // ── Utility helpers ────────────────────────────────────
 
@@ -505,6 +573,31 @@ function makeCanvas(id, label, size) {
   return { panel, canvas: c };
 }
 
+// ── Subject mask computation ────────────────────────────
+//
+// Returns a Uint8Array (length = pixel count) where 1 = background (excluded)
+// and 0 = subject (included in scoring).  Computed from the REFERENCE image only.
+//
+// A pixel is background if its RGB Euclidean distance from white (255,255,255)
+// OR from black (0,0,0) is less than `threshold` (a raw deltaE value in the
+// same 0–441 Euclidean RGB space).  The UI slider maps 1–100 → threshold
+// directly (default 20, roughly equivalent to deltaE ~20 from white/black).
+
+function computeMask(refData, threshold) {
+  const n = refData.data.length / 4;
+  const mask = new Uint8Array(n); // 0 = subject, 1 = background
+  for (let i = 0; i < n; i++) {
+    const p = i * 4;
+    const r = refData.data[p];
+    const g = refData.data[p+1];
+    const b = refData.data[p+2];
+    const distWhite = Math.sqrt((255-r)**2 + (255-g)**2 + (255-b)**2);
+    const distBlack = Math.sqrt(r*r + g*g + b*b);
+    mask[i] = (distWhite < threshold || distBlack < threshold) ? 1 : 0;
+  }
+  return mask;
+}
+
 // ── Load reference image into ImageData ────────────────
 
 function loadRefImageData(src) {
@@ -535,9 +628,9 @@ function loadDrawingImageData(src, fileBlob) {
       // Custom file — check type
       const mime = fileBlob.type;
       if (mime === 'image/svg+xml' || fileBlob.name?.endsWith('.svg')) {
-        // SVG file: render via <img>
+        // SVG file: render via <img> — pass isBlobUrl=true so URL gets revoked
         const url = URL.createObjectURL(fileBlob);
-        renderSvgBlobToImageData(url, resolve, reject);
+        renderSvgBlobToImageData(url, resolve, reject, true);
       } else {
         // HTML file: render via iframe
         const url = URL.createObjectURL(fileBlob);
@@ -547,7 +640,8 @@ function loadDrawingImageData(src, fileBlob) {
     }
 
     if (src.endsWith('.svg')) {
-      renderSvgBlobToImageData(src, resolve, reject);
+      // Regular file path, not a blob URL — isBlobUrl=false
+      renderSvgBlobToImageData(src, resolve, reject, false);
     } else {
       // HTML page — use iframe approach
       renderHtmlUrlToImageData(src, resolve, reject, false);
@@ -555,15 +649,19 @@ function loadDrawingImageData(src, fileBlob) {
   });
 }
 
-function renderSvgBlobToImageData(url, resolve, reject) {
+function renderSvgBlobToImageData(url, resolve, reject, isBlobUrl) {
   const img = new Image();
   img.onload = () => {
     const c = document.createElement('canvas');
     c.width = CANVAS_SIZE;
     c.height = CANVAS_SIZE;
     const ctx = c.getContext('2d');
+    // Fill white first so transparent SVG areas compare correctly against
+    // reference photos that have a white/light background (not black)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    URL.revokeObjectURL && URL.revokeObjectURL(url);
+    if (isBlobUrl) URL.revokeObjectURL(url);
     resolve(ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE));
   };
   img.onerror = () => reject(new Error('Failed to render SVG'));
@@ -621,7 +719,9 @@ function renderHtmlUrlToImageData(url, resolve, reject, isBlob) {
       const blob = new Blob([svgStr], { type: 'image/svg+xml' });
       const blobUrl = URL.createObjectURL(blob);
 
-      renderSvgBlobToImageData(blobUrl, resolve, reject);
+      // Pass isBlobUrl=true so the serialized SVG blob URL gets revoked after use
+      renderSvgBlobToImageData(blobUrl, resolve, reject, true);
+      // Revoke the original blob URL (for file-upload case) after handing off
       if (isBlob) URL.revokeObjectURL(url);
     } catch(e) {
       reject(e);
@@ -633,76 +733,109 @@ function renderHtmlUrlToImageData(url, resolve, reject, isBlob) {
 }
 
 // ── Diff computation ───────────────────────────────────
+//
+// mask (optional): Uint8Array from computeMask(), length = pixel count.
+//   mask[i] === 1  → background pixel: excluded from scoring stats,
+//                    drawn as grey (dimmed) in the heatmap.
+//   mask[i] === 0  → subject pixel: included normally.
+// When mask is null/undefined all pixels are scored (original behaviour).
 
-function computeDiff(refData, svgData, threshold) {
+function computeDiff(refData, svgData, threshold, mask) {
   const w = CANVAS_SIZE, h = CANVAS_SIZE;
   const n = w * h;
   const heatData = new Uint8ClampedArray(n * 4);
   let totalError = 0;
   let maxError = 0;
   let withinThresh = 0;
+  let subjectCount = 0; // pixels actually scored
 
-  // threshold in RGB Euclidean distance (max possible = sqrt(3)*255 ≈ 441)
-  // Normalise threshold: user sets 0-100, map to 0-441
-  const thresh = threshold / 100 * 441;
+  // threshold is a 0-255 per-channel value; convert to RGB Euclidean distance
+  // (max possible Euclidean = sqrt(3)*255 ≈ 441)
+  const thresh = threshold * Math.sqrt(3);
 
   for (let i = 0; i < n; i++) {
     const p = i * 4;
+    const isBg = mask && mask[i] === 1;
+
     const dr = refData.data[p]   - svgData.data[p];
     const dg = refData.data[p+1] - svgData.data[p+1];
     const db = refData.data[p+2] - svgData.data[p+2];
     const dist = Math.sqrt(dr*dr + dg*dg + db*db);
-    totalError += dist;
-    if (dist > maxError) maxError = dist;
-    if (dist <= thresh) withinThresh++;
+
+    if (!isBg) {
+      // Subject pixel — count in scoring
+      totalError += dist;
+      if (dist > maxError) maxError = dist;
+      if (dist <= thresh) withinThresh++;
+      subjectCount++;
+    }
 
     // Heat map: green (close) → yellow → red (far)
-    // normalise dist to 0–1 over range 0–441
-    const t = Math.min(dist / 441, 1);
-    // t=0 → green (0,200,80), t=0.5 → yellow (200,200,0), t=1 → red (200,0,0)
-    let r, g, b;
-    if (t < 0.5) {
-      const s = t * 2;
-      r = Math.round(s * 220);
-      g = Math.round(200 - s * 10);
-      b = Math.round(80 - s * 80);
+    // Background (masked) pixels rendered as muted grey.
+    let r, g, b, a;
+    if (isBg) {
+      // Dim grey overlay — shows the pixel exists but is excluded
+      r = 80; g = 80; b = 90; a = 120;
     } else {
-      const s = (t - 0.5) * 2;
-      r = 220;
-      g = Math.round(190 - s * 190);
-      b = 0;
+      // normalise dist to 0–1 over range 0–441
+      const t = Math.min(dist / 441, 1);
+      // t=0 → green (0,200,80), t=0.5 → yellow (200,200,0), t=1 → red (200,0,0)
+      if (t < 0.5) {
+        const s = t * 2;
+        r = Math.round(s * 220);
+        g = Math.round(200 - s * 10);
+        b = Math.round(80 - s * 80);
+      } else {
+        const s = (t - 0.5) * 2;
+        r = 220;
+        g = Math.round(190 - s * 190);
+        b = 0;
+      }
+      a = 220;
     }
     heatData[p]   = r;
     heatData[p+1] = g;
     heatData[p+2] = b;
-    heatData[p+3] = 220;
+    heatData[p+3] = a;
   }
 
-  const meanError = totalError / n;
-  const pctWithin = (withinThresh / n * 100);
+  // When a mask is active, compute stats only over subject pixels.
+  // Fall back to all-pixels if mask excluded everything (safety guard).
+  const denominator = (mask && subjectCount > 0) ? subjectCount : n;
+  const bgCount = mask ? (n - subjectCount) : 0;
+
+  const meanError = totalError / denominator;
+  const pctWithin = (withinThresh / denominator * 100);
 
   return {
     imageData: new ImageData(heatData, w, h),
     meanError,
     maxError,
-    pctWithin
+    pctWithin,
+    subjectCount: mask ? subjectCount : n,
+    bgCount,
+    totalPixels: n
   };
 }
 
-// Compute diff for a rectangular region (in canvas pixels)
-function computeRegionDiff(refData, svgData, threshold, x0, y0, x1, y1) {
+// Compute diff for a rectangular region (in canvas pixels).
+// mask is optional — same Uint8Array from computeMask(); background pixels
+// within the region are excluded from the stats when mask is provided.
+function computeRegionDiff(refData, svgData, threshold, x0, y0, x1, y1, mask) {
   const w = CANVAS_SIZE;
   const rx0 = Math.max(0, Math.min(x0, x1));
   const ry0 = Math.max(0, Math.min(y0, y1));
   const rx1 = Math.min(w, Math.max(x0, x1));
   const ry1 = Math.min(w, Math.max(y0, y1));
 
-  const thresh = threshold / 100 * 441;
-  let totalError = 0, n = 0, maxErr = 0, within = 0;
+  const thresh = threshold * Math.sqrt(3);
+  let totalError = 0, n = 0, maxErr = 0, within = 0, bgSkipped = 0;
 
   for (let y = ry0; y < ry1; y++) {
     for (let x = rx0; x < rx1; x++) {
-      const p = (y * w + x) * 4;
+      const idx = y * w + x;
+      const p = idx * 4;
+      if (mask && mask[idx] === 1) { bgSkipped++; continue; }
       const dr = refData.data[p]   - svgData.data[p];
       const dg = refData.data[p+1] - svgData.data[p+1];
       const db = refData.data[p+2] - svgData.data[p+2];
@@ -718,7 +851,8 @@ function computeRegionDiff(refData, svgData, threshold, x0, y0, x1, y1) {
     meanError: totalError / n,
     pctWithin: within / n * 100,
     maxError: maxErr,
-    pixelCount: n
+    pixelCount: n,
+    bgSkipped
   };
 }
 
@@ -736,6 +870,12 @@ function renderSideBySide() {
   ctx1.putImageData(refImageData, 0, 0);
   ctx2.putImageData(svgImageData, 0, 0);
 
+  // Always compute and show scores even in side-by-side mode
+  const threshold = parseFloat(thresholdSlider.value);
+  const result = computeDiff(refImageData, svgImageData, threshold, currentMask);
+  diffImageData = result;
+  updateScores(result.meanError, result.pctWithin, result.maxError, undefined, undefined, result);
+
   // Add region selection to drawing canvas
   setupRegionSelection(c2, svgImageData);
 }
@@ -746,6 +886,12 @@ function renderOverlay() {
   canvasArea.appendChild(panel);
   const ctx = canvas.getContext('2d');
   drawOverlay(ctx, parseFloat(opacitySlider.value) / 100);
+
+  // Always compute and show scores even in overlay mode
+  const threshold = parseFloat(thresholdSlider.value);
+  const result = computeDiff(refImageData, svgImageData, threshold, currentMask);
+  diffImageData = result;
+  updateScores(result.meanError, result.pctWithin, result.maxError, undefined, undefined, result);
 
   opacitySlider.oninput = () => {
     opacityVal.textContent = opacitySlider.value + '%';
@@ -770,7 +916,7 @@ function drawOverlay(ctx, alpha) {
 
 function renderDiff() {
   const threshold = parseFloat(thresholdSlider.value);
-  const result = computeDiff(refImageData, svgImageData, threshold);
+  const result = computeDiff(refImageData, svgImageData, threshold, currentMask);
   diffImageData = result;
 
   canvasArea.innerHTML = '';
@@ -782,17 +928,17 @@ function renderDiff() {
   c1.getContext('2d').putImageData(refImageData, 0, 0);
   c2.getContext('2d').putImageData(result.imageData, 0, 0);
 
-  updateScores(result.meanError, result.pctWithin, result.maxError);
+  updateScores(result.meanError, result.pctWithin, result.maxError, undefined, undefined, result);
 
   // Region selection on diff canvas
   setupRegionSelection(c2, svgImageData, true);
 
   thresholdSlider.oninput = () => {
     thresholdVal.textContent = thresholdSlider.value;
-    const r2 = computeDiff(refImageData, svgImageData, parseFloat(thresholdSlider.value));
+    const r2 = computeDiff(refImageData, svgImageData, parseFloat(thresholdSlider.value), currentMask);
     diffImageData = r2;
     c2.getContext('2d').putImageData(r2.imageData, 0, 0);
-    updateScores(r2.meanError, r2.pctWithin, r2.maxError);
+    updateScores(r2.meanError, r2.pctWithin, r2.maxError, undefined, undefined, r2);
   };
 }
 
@@ -803,8 +949,8 @@ function renderCompare() {
   }
 
   const threshold = parseFloat(thresholdSlider.value);
-  const r1 = computeDiff(refImageData, svgImageData, threshold);
-  const r2 = computeDiff(refImageData, svgImageData2, threshold);
+  const r1 = computeDiff(refImageData, svgImageData,  threshold, currentMask);
+  const r2 = computeDiff(refImageData, svgImageData2, threshold, currentMask);
   diffImageData = r1;
   diffImageData2 = r2;
 
@@ -829,32 +975,50 @@ function renderCompare() {
   cD2.getContext('2d').putImageData(svgImageData2, 0, 0);
   cHm2.getContext('2d').putImageData(r2.imageData, 0, 0);
 
-  updateScores(r1.meanError, r1.pctWithin, r1.maxError, r2.meanError, r2.pctWithin);
+  updateScores(r1.meanError, r1.pctWithin, r1.maxError, r2.meanError, r2.pctWithin, r1);
 
   thresholdSlider.oninput = () => {
     thresholdVal.textContent = thresholdSlider.value;
-    const nr1 = computeDiff(refImageData, svgImageData,  parseFloat(thresholdSlider.value));
-    const nr2 = computeDiff(refImageData, svgImageData2, parseFloat(thresholdSlider.value));
+    const nr1 = computeDiff(refImageData, svgImageData,  parseFloat(thresholdSlider.value), currentMask);
+    const nr2 = computeDiff(refImageData, svgImageData2, parseFloat(thresholdSlider.value), currentMask);
     diffImageData  = nr1;
     diffImageData2 = nr2;
     cHm1.getContext('2d').putImageData(nr1.imageData, 0, 0);
     cHm2.getContext('2d').putImageData(nr2.imageData, 0, 0);
-    updateScores(nr1.meanError, nr1.pctWithin, nr1.maxError, nr2.meanError, nr2.pctWithin);
+    updateScores(nr1.meanError, nr1.pctWithin, nr1.maxError, nr2.meanError, nr2.pctWithin, nr1);
   };
 }
 
-function updateScores(mean1, pct1, max1, mean2, pct2) {
-  scoreMean.textContent = mean1.toFixed(1);
-  scoreMean.className   = 'score-value ' + scoreClass(mean1);
+function updateScores(mean1, pct1, max1, mean2, pct2, diffResult) {
+  // mean1/mean2/max1 are in RGB Euclidean distance units (0–441).
+  // Normalise to 0–255 per-channel equivalent (divide by sqrt(3)) for display,
+  // so the score is in the same units as the threshold slider.
+  const SQ3 = Math.sqrt(3);
+  const meanNorm1 = mean1 / SQ3;
+  const maxNorm1  = max1  / SQ3;
+  scoreMean.textContent = meanNorm1.toFixed(1);
+  scoreMean.className   = 'score-value ' + scoreClass(meanNorm1);
   scorePct.textContent  = pct1.toFixed(1) + '%';
-  scorePct.className    = 'score-value ' + scoreClass(100 - pct1);  // more pixels in = better
-  scoreMax.textContent  = max1.toFixed(0);
+  scorePct.className    = 'score-value ' + scoreClass(100 - pct1);  // high pct = good
+  scoreMax.textContent  = maxNorm1.toFixed(0);
+
+  // Subject mask pixel count display
+  if (diffResult && currentMask) {
+    maskCountWrap.style.display = '';
+    const subj  = diffResult.subjectCount;
+    const total = diffResult.totalPixels;
+    const bgPct = ((diffResult.bgCount / total) * 100).toFixed(1);
+    scoreMaskCount.textContent = `${subj.toLocaleString()} / ${total.toLocaleString()} (${bgPct}% bg masked)`;
+  } else {
+    maskCountWrap.style.display = 'none';
+  }
 
   if (mean2 !== undefined) {
     compareScore2Wrap.style.display    = '';
     compareScore2PctWrap.style.display = '';
-    scoreMean2.textContent = mean2.toFixed(1);
-    scoreMean2.className   = 'score-value ' + scoreClass(mean2);
+    const meanNorm2 = mean2 / SQ3;
+    scoreMean2.textContent = meanNorm2.toFixed(1);
+    scoreMean2.className   = 'score-value ' + scoreClass(meanNorm2);
     scorePct2.textContent  = pct2.toFixed(1) + '%';
     scorePct2.className    = 'score-value ' + scoreClass(100 - pct2);
 
@@ -935,12 +1099,16 @@ function setupRegionSelection(canvas, drawingData, isDiff) {
 
     const threshold = parseFloat(thresholdSlider.value);
     const result = computeRegionDiff(refImageData, svgImageData, threshold,
-                                     startX, startY, endX, endY);
+                                     startX, startY, endX, endY, currentMask);
     if (result) {
+      const maskNote = currentMask && result.bgSkipped > 0
+        ? `, ${result.bgSkipped} bg px masked`
+        : '';
       regionInfo.textContent =
         `Selected region (${w}×${h}px): ` +
-        `mean error ${result.meanError.toFixed(1)}, ` +
-        `${result.pctWithin.toFixed(1)}% within threshold`;
+        `mean error ${(result.meanError / Math.sqrt(3)).toFixed(1)}, ` +
+        `${result.pctWithin.toFixed(1)}% within threshold` +
+        maskNote;
     }
   });
 
@@ -984,6 +1152,14 @@ async function doRender() {
       refSrc = refSelect.value;
     }
     refImageData = await loadRefImageData(refSrc);
+
+    // 1b. Compute subject mask (if toggle is on)
+    if (maskToggle.checked) {
+      const bgThreshold = parseFloat(maskThresholdSlider.value);
+      currentMask = computeMask(refImageData, bgThreshold);
+    } else {
+      currentMask = null;
+    }
 
     // 2. Load drawing 1
     if (svgSelect.value === '' && !svgFileInput.files[0]) {
@@ -1057,6 +1233,14 @@ opacitySlider.addEventListener('input', () => {
 
 thresholdSlider.addEventListener('input', () => {
   thresholdVal.textContent = thresholdSlider.value;
+});
+
+maskToggle.addEventListener('change', () => {
+  maskThresholdRow.style.display = maskToggle.checked ? '' : 'none';
+});
+
+maskThresholdSlider.addEventListener('input', () => {
+  maskThresholdVal.textContent = maskThresholdSlider.value;
 });
 
 runBtn.addEventListener('click', doRender);

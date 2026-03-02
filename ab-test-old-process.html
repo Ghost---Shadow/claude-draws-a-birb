@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AB Test - Old Process Bird</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f8f8f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    svg {
+      border: 1px solid #ddd;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Shadow under feet -->
+  <ellipse cx="262" cy="450" rx="52" ry="6" fill="#c0c0c0" opacity="0.45"/>
+
+  <!-- BODY - large orange ellipse, body center at (258, 290) -->
+  <!-- Shifted right ~10px and down a touch from prev for better centering -->
+  <!-- rx=118, ry=85 stays same; moved body up by using cy=265 -->
+  <ellipse cx="258" cy="278" rx="118" ry="86" fill="#e07832"/>
+
+  <!-- YELLOW BELLY - lower center crescent, z-below wing -->
+  <ellipse cx="253" cy="315" rx="88" ry="62" fill="#f2be2a"/>
+
+  <!-- WING - dark navy, covers upper ~55% of body on the left side -->
+  <!-- Right edge of wing ends around x=282, leaving orange breast visible right -->
+  <path d="
+    M 153,270
+    C 148,235 158,198 183,179
+    C 208,160 251,165 280,191
+    C 300,210 303,240 292,265
+    C 280,287 255,298 228,296
+    C 196,293 157,284 153,270 Z
+  " fill="#252840"/>
+
+  <!-- BLUE-GRAY upper wing accent -->
+  <path d="
+    M 160,262
+    C 157,234 167,205 188,189
+    C 211,172 245,175 268,196
+    C 247,182 220,180 199,191
+    C 174,204 160,231 159,260
+    Z
+  " fill="#a4bdc8"/>
+
+  <!-- TAIL - narrow orange-red wedge going left from body -->
+  <path d="
+    M 147,278
+    C 127,275 92,284 68,307
+    C 84,298 116,293 142,298
+    C 146,290 148,284 147,278 Z
+  " fill="#d95520"/>
+
+  <!-- HEAD - dark navy, upper right of body -->
+  <!-- center (315, 200), r=40 -->
+  <circle cx="315" cy="200" r="40" fill="#252840"/>
+
+  <!-- BEAK - thin right-pointing triangle -->
+  <polygon points="349,193 390,200 349,207" fill="#252840"/>
+
+  <!-- WHITE EYE -->
+  <circle cx="331" cy="189" r="8.5" fill="white"/>
+  <circle cx="333" cy="189" r="3.5" fill="#1a1a2e"/>
+
+  <!-- LEFT LEG -->
+  <line x1="242" y1="358" x2="232" y2="418" stroke="#252840" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Left toes -->
+  <line x1="232" y1="418" x2="210" y2="424" stroke="#252840" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="232" y1="418" x2="230" y2="432" stroke="#252840" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="232" y1="418" x2="249" y2="426" stroke="#252840" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- RIGHT LEG -->
+  <line x1="270" y1="360" x2="263" y2="418" stroke="#252840" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Right toes -->
+  <line x1="263" y1="418" x2="241" y2="424" stroke="#252840" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="263" y1="418" x2="261" y2="432" stroke="#252840" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="263" y1="418" x2="280" y2="426" stroke="#252840" stroke-width="3.5" stroke-linecap="round"/>
+
+</svg>
+</body>
+</html>
