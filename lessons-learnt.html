@@ -145,6 +145,16 @@
     </ul>
 
     <!-- ================================================== -->
+    <h2>V2 Redraws <span class="session-tag">v2-redraw</span></h2>
+    <ul>
+      <li><strong>feTurbulence is a performance trap.</strong> Applying multiple feTurbulence-based filters (especially nested inside clip-paths) can hang the browser renderer entirely — screenshot timeouts, frozen pages. For iridescent spots, hand-placed blurred ellipses/circles are faster and give more control over placement.</li>
+      <li><strong>Front-facing birds need a unified silhouette.</strong> Drawing head and body as separate shapes always produces a "ball on an egg" look. A single <code>&lt;path&gt;</code> for the entire outline, with colour regions overlaid, produces a much more natural shape. The orange-to-brown transition zones (blended edge paths at ~40% opacity) hide the seam between colour regions.</li>
+      <li><strong>Flat geometric style is the easiest to reproduce accurately.</strong> When the reference is already stylised (baseline.jpg), shape accuracy is high because the target shapes are simple primitives. Photorealistic birds (robin.jpg, hummingbird.jpg) are harder because organic shapes resist clean SVG paths.</li>
+      <li><strong>Layered tail feathers beat splayed fingers.</strong> Drawing separate tail feather paths that overlap slightly (each 8-10px apart vertically) with consistent curvature reads as a natural fan. Drawing them all from one origin point with different end angles looks like a hand.</li>
+      <li><strong>feGaussianBlur filter for spot softening is lightweight.</strong> A simple <code>&lt;feGaussianBlur stdDeviation="1.5"/&gt;</code> on individual circles is cheap and renders instantly, unlike feTurbulence masks which compound exponentially.</li>
+    </ul>
+
+    <!-- ================================================== -->
     <h2>Workflow</h2>
     <ul>
       <li><strong>Five render-feedback iterations.</strong> View → zoom into problem areas → identify specific failures → fix exactly those → repeat. Never speculate; see it first.</li>

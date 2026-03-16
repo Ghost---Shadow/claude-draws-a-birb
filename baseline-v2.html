@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baseline Bird v2 - Claude Draws a Birb</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f5f2ee;
+      font-family: Georgia, serif;
+    }
+    h1 { color: #2a2a3a; margin-bottom: 1rem; }
+    .container { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    a.back { color: #6a6a7a; text-decoration: none; font-size: 0.9rem; margin-bottom: 1rem; display: block; }
+    a.back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">&larr; Back to gallery</a>
+  <h1>Baseline Bird v2</h1>
+  <div class="container">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+
+      <!-- Background -->
+      <rect width="500" height="500" fill="#faf8f5"/>
+
+      <!-- Ground shadow -->
+      <ellipse cx="270" cy="422" rx="120" ry="5" fill="#d8d4cc" opacity="0.6"/>
+
+      <!-- ===== FLAT GEOMETRIC ROBIN ===== -->
+
+      <!-- Tail — orange-red, angled behind body, single pointed shape -->
+      <path d="M 148,320
+               L 60,400
+               C 55,406 60,412 68,408
+               L 100,388
+               C 95,395 78,410 72,415
+               C 68,418 72,424 78,420
+               L 155,355 Z"
+            fill="#e07040"/>
+
+      <!-- Yellow belly — drawn first, visible as crescent at bottom -->
+      <path d="M 260,225
+               C 320,230 365,280 368,340
+               C 370,380 350,410 310,418
+               C 278,425 248,422 228,415
+               C 195,405 170,375 168,340
+               C 165,300 185,258 215,238
+               C 235,225 250,222 260,225 Z"
+            fill="#f0b848"/>
+
+      <!-- Orange breast — the dominant visible area on front of body -->
+      <path d="M 290,230
+               C 340,248 368,295 368,345
+               C 368,385 345,412 310,418
+               C 290,422 268,420 258,415
+               C 238,406 225,388 220,365
+               C 214,335 218,300 230,272
+               C 245,248 268,232 290,230 Z"
+            fill="#e88030"/>
+
+      <!-- Dark navy wing — angular, covering back half of body -->
+      <path d="M 235,225
+               C 215,230 195,250 185,280
+               C 172,318 170,360 185,392
+               C 192,405 205,410 220,405
+               C 238,398 252,378 260,350
+               C 270,315 268,275 258,245
+               C 250,228 242,222 235,225 Z"
+            fill="#1e2240"/>
+
+      <!-- Blue-gray wing accent -->
+      <path d="M 218,248
+               C 208,260 200,280 198,305
+               C 195,332 198,358 208,375
+               C 215,385 225,388 235,382
+               C 245,375 252,360 255,340
+               C 258,315 256,288 248,268
+               C 242,252 232,244 218,248 Z"
+            fill="#8a9aaa"/>
+
+      <!-- Head — dark navy circle -->
+      <circle cx="315" cy="195" r="52" fill="#1e2240"/>
+
+      <!-- Eye -->
+      <circle cx="335" cy="188" r="8.5" fill="white"/>
+      <circle cx="337" cy="188" r="3.5" fill="#1e2240"/>
+
+      <!-- Beak — dark navy, sharp triangle -->
+      <path d="M 362,200 L 400,210 L 362,218 Z" fill="#1e2240"/>
+
+      <!-- Legs -->
+      <g stroke="#1e2240" stroke-width="3.5" stroke-linecap="round" fill="none">
+        <line x1="268" y1="415" x2="265" y2="422"/>
+        <line x1="300" y1="414" x2="305" y2="422"/>
+      </g>
+      <!-- Feet -->
+      <g fill="#1e2240">
+        <ellipse cx="252" cy="422" rx="6" ry="4"/>
+        <ellipse cx="265" cy="424" rx="5" ry="3.5"/>
+        <ellipse cx="278" cy="422" rx="6" ry="4"/>
+        <ellipse cx="292" cy="422" rx="6" ry="4"/>
+        <ellipse cx="305" cy="424" rx="5" ry="3.5"/>
+        <ellipse cx="318" cy="422" rx="6" ry="4"/>
+      </g>
+
+      <!-- Ground line -->
+      <line x1="120" y1="422" x2="420" y2="422" stroke="#c8c4bc" stroke-width="1.5"/>
+
+    </svg>
+  </div>
+</body>
+</html>
